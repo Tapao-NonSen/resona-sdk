@@ -38,8 +38,21 @@ type CatalogApi = {
 	genres: (self: CatalogApi, kind: string?) -> ({ Types.GenreCount }, Types.Meta),
 }
 type PoolApi = { next: (self: PoolApi, filters: Types.Filters?) -> (Types.Track?, Types.Meta) }
-type ReporterApi = { report: (self: ReporterApi, assetId: number, kind: string, note: string?, suggested: Types.ReportSuggestion?) -> boolean }
-type State = { catalog: CatalogApi, pool: PoolApi, reporter: ReporterApi, validateAdd: (number) -> (boolean, string, any?) }
+type ReporterApi = {
+	report: (
+		self: ReporterApi,
+		assetId: number,
+		kind: string,
+		note: string?,
+		suggested: Types.ReportSuggestion?
+	) -> boolean,
+}
+type State = {
+	catalog: CatalogApi,
+	pool: PoolApi,
+	reporter: ReporterApi,
+	validateAdd: (number) -> (boolean, string, any?),
+}
 local state: State? = nil
 local warned = { http_disabled = false, unauthorized = false }
 local notInitialized: Types.Meta = { source = "seed", error = "not initialized" }
@@ -73,13 +86,25 @@ function Resona.init(input: Types.Config)
 	local observer = if resolved.contribute then Observer.new(client, RobloxTransport.encode, waitFn, nil) else nil
 	local function validateAdd(id: number): (boolean, string, any?)
 		local body, meta = client:request("GET", "/v1/reports/add-check/" .. tostring(id))
-		if not body or meta.error then return false, "Public audio check unavailable. Try again later." end
+		if not body or meta.error then
+			return false, "Public audio check unavailable. Try again later."
+		end
 		local ok, result = pcall(RobloxTransport.decode, body)
-		if not ok or type(result) ~= "table" then return false, "Public audio check unavailable. Try again later." end
-		if result.eligible == true then return true, "Public Music confirmed.", result.asset end
-		if result.reason == "not_public" then return false, "This ID is not listed publicly in the Creator Store." end
-		if result.reason == "not_music" then return false, "This is not a Music audio asset." end
-		if result.reason == "too_short" then return false, "Music must be at least 60 seconds long." end
+		if not ok or type(result) ~= "table" then
+			return false, "Public audio check unavailable. Try again later."
+		end
+		if result.eligible == true then
+			return true, "Public Music confirmed.", result.asset
+		end
+		if result.reason == "not_public" then
+			return false, "This ID is not listed publicly in the Creator Store."
+		end
+		if result.reason == "not_music" then
+			return false, "This is not a Music audio asset."
+		end
+		if result.reason == "too_short" then
+			return false, "Music must be at least 60 seconds long."
+		end
 		return false, "Could not verify this public audio asset."
 	end
 	state = { catalog = catalog, pool = pool, reporter = reporter, validateAdd = validateAdd }
@@ -145,9 +170,13 @@ function Resona.report(assetId: number, kind: Types.ReportKind, note: string?, s
 	end
 	if state then
 		if kind == "add" then
-			if type(assetId) ~= "number" or assetId % 1 ~= 0 or assetId <= 0 or assetId > 9007199254740991 then return false end
+			if type(assetId) ~= "number" or assetId % 1 ~= 0 or assetId <= 0 or assetId > 9007199254740991 then
+				return false
+			end
 			local eligible = state.validateAdd(assetId)
-			if not eligible then return false end
+			if not eligible then
+				return false
+			end
 		end
 		return state.reporter:report(assetId, kind, note, suggested)
 	end
@@ -155,8 +184,12 @@ function Resona.report(assetId: number, kind: Types.ReportKind, note: string?, s
 end
 
 function Resona.checkAdd(assetId: number): (boolean, string, any?)
-	if game:GetService("RunService"):IsClient() then return ReportClient.checkAdd(assetId) end
-	if not state then return false, "Resona is not initialized." end
+	if game:GetService("RunService"):IsClient() then
+		return ReportClient.checkAdd(assetId)
+	end
+	if not state then
+		return false, "Resona is not initialized."
+	end
 	if type(assetId) ~= "number" or assetId % 1 ~= 0 or assetId <= 0 or assetId > 9007199254740991 then
 		return false, "Enter a valid Roblox audio asset ID."
 	end

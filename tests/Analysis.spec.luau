@@ -13,7 +13,9 @@ return {
 		end
 		local expected = Estimator.estimateBpm(envelope)
 		local yields = 0
-		local actual, onset = Estimator.estimateBpm(envelope, function() yields += 1 end)
+		local actual, onset = Estimator.estimateBpm(envelope, function()
+			yields += 1
+		end)
 		Expect.equal(actual.bpm, expected.bpm)
 		Expect.equal(actual.firstBeatOffset, expected.firstBeatOffset)
 		assert(yields > 100 and #onset > 100)

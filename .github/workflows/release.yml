@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ok-nick/setup-aftman@v0.4.2
+      - run: aftman install
+      - run: lune run tests/run
+      - name: Tag must match wally.toml version
+        run: grep -q "^version = \"${GITHUB_REF_NAME#v}\"" wally.toml
+      - run: rojo build default.project.json -o Resona.rbxm
+      - run: gh release create "$GITHUB_REF_NAME" Resona.rbxm --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

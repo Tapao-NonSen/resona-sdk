@@ -9,7 +9,9 @@ return {
 			table.insert(sent, { path = path, body = body })
 			return "{}", { source = "network" }
 		end
-		local observer = Observer.new(client, function(value) return value end, function() end, function(callback)
+		local observer = Observer.new(client, function(value)
+			return value
+		end, function() end, function(callback)
 			table.insert(scheduled, callback)
 		end)
 		observer:submit({ assetId = 10, duration = 123 })

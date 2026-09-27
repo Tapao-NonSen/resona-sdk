@@ -67,7 +67,9 @@ function Estimator.estimateBpm(envelope: Envelope, yieldFn: (() -> ())?): (Estim
 	local onset, windowStart = Estimator.onsetCurve(envelope)
 	local bestBpm, bestScore, totalScore, scoreCount = 0, -1, 0, 0
 	for step = 0, (200 - 60) * 4 do
-		if yieldFn and step % 2 == 0 then yieldFn() end
+		if yieldFn and step % 2 == 0 then
+			yieldFn()
+		end
 		local bpm = 60 + step * 0.25
 		local period = 60 / bpm / DT
 		local score = autocorrelation(onset, period)
@@ -102,7 +104,8 @@ function Estimator.estimateBpm(envelope: Envelope, yieldFn: (() -> ())?): (Estim
 		bpm = bestBpm,
 		confidence = math.round(bestScore / (totalScore / scoreCount) * 100) / 100,
 		firstBeatOffset = (windowStart + bestPhase * DT) % beatPeriod,
-	}, onset
+	},
+		onset
 end
 
 return Estimator

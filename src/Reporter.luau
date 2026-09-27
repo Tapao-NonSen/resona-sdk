@@ -38,9 +38,13 @@ local function validName(value: any): boolean
 end
 
 local function validAddSuggestion(value: any): boolean
-	if type(value) ~= "table" or not validName(value.title) or not validName(value.artist) then return false end
+	if type(value) ~= "table" or not validName(value.title) or not validName(value.artist) then
+		return false
+	end
 	for key in value do
-		if key ~= "title" and key ~= "artist" then return false end
+		if key ~= "title" and key ~= "artist" then
+			return false
+		end
 	end
 	return true
 end
@@ -55,22 +59,24 @@ function Reporter:report(assetId: number, kind: string, note: string?, suggested
 		or (note ~= nil and (type(note) ~= "string" or #note > 500))
 		or (suggested ~= nil and kind == "unavailable")
 		or (suggested ~= nil and kind == "add" and not validAddSuggestion(suggested))
-		or (suggested ~= nil and kind == "metadata" and (
-			type(suggested) ~= "table"
-			or (suggested.artworkAssetId == nil and suggested.genre == nil)
-			or (suggested.artworkAssetId ~= nil and (
-				type(suggested.artworkAssetId) ~= "number"
-				or suggested.artworkAssetId <= 0
-				or suggested.artworkAssetId > 9007199254740991
-				or suggested.artworkAssetId % 1 ~= 0
-			))
-			or (suggested.genre ~= nil and (
-				type(suggested.genre) ~= "string"
-				or #suggested.genre > 60
-				or not suggested.genre:match("%S")
-				or suggested.genre:find("%c") ~= nil
-			))
-		))
+		or (
+			suggested ~= nil
+			and kind == "metadata"
+			and (
+				type(suggested) ~= "table"
+				or (suggested.artworkAssetId == nil and suggested.genre == nil)
+				or (suggested.artworkAssetId ~= nil and (type(suggested.artworkAssetId) ~= "number" or suggested.artworkAssetId <= 0 or suggested.artworkAssetId > 9007199254740991 or suggested.artworkAssetId % 1 ~= 0))
+				or (
+					suggested.genre ~= nil
+					and (
+						type(suggested.genre) ~= "string"
+						or #suggested.genre > 60
+						or not suggested.genre:match("%S")
+						or suggested.genre:find("%c") ~= nil
+					)
+				)
+			)
+		)
 	then
 		warn("[Resona] Dropped invalid report")
 		return false

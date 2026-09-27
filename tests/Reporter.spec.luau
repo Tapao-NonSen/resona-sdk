@@ -65,9 +65,13 @@ return {
 		local sent = {}
 		local client = {}
 		function client:request(_method: string, _path: string, body: any)
-			for _, report in body do table.insert(sent, report) end
+			for _, report in body do
+				table.insert(sent, report)
+			end
 		end
-		local reporter = Reporter.new(client, function(value) return value end, function() end, function(callback)
+		local reporter = Reporter.new(client, function(value)
+			return value
+		end, function() end, function(callback)
 			callback()
 		end, 60)
 		reporter:report(123, "metadata", "Wrong genre", { genre = "drum & bass" })
@@ -79,9 +83,14 @@ return {
 	["keeps add title and artist as separate fields"] = function()
 		local sent
 		local client = {}
-		function client:request(_method: string, _path: string, body: any) sent = body end
-		local reporter = Reporter.new(client, function(value) return value end, function() end,
-			function(callback) callback() end, 60)
+		function client:request(_method: string, _path: string, body: any)
+			sent = body
+		end
+		local reporter = Reporter.new(client, function(value)
+			return value
+		end, function() end, function(callback)
+			callback()
+		end, 60)
 		Expect.equal(reporter:report(123, "add", nil, { title = "Shiawase", artist = "Dion Timmer" }), true)
 		Expect.equal(sent[1].suggested.title, "Shiawase")
 		Expect.equal(sent[1].suggested.artist, "Dion Timmer")

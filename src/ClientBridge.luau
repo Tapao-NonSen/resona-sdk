@@ -6,8 +6,16 @@ local Bridge = {}
 local connections = {}
 local ANALYSIS_INTERVAL = 300 -- at most one 24-second capture per game server every five minutes
 
-function Bridge.start(pool: any, observer: any, reporter: any, showReportGui: boolean?, validateAdd: (number) -> (boolean, string, any?))
-	for _, connection in connections do connection:Disconnect() end
+function Bridge.start(
+	pool: any,
+	observer: any,
+	reporter: any,
+	showReportGui: boolean?,
+	validateAdd: (number) -> (boolean, string, any?)
+)
+	for _, connection in connections do
+		connection:Disconnect()
+	end
 	table.clear(connections)
 	local folder = ReplicatedStorage:FindFirstChild("ResonaBridge") or Instance.new("Folder")
 	folder.Name = "ResonaBridge"
@@ -38,29 +46,42 @@ function Bridge.start(pool: any, observer: any, reporter: any, showReportGui: bo
 	local checking: { [Player]: boolean } = {}
 	local checkCount: { [Player]: number } = {}
 	local reportCount: { [Player]: number } = {}
-	local allowed = { genre = true, mood = true, bpmMin = true, bpmMax = true, energyMin = true,
-		durationMax = true, kind = true }
+	local allowed =
+		{ genre = true, mood = true, bpmMin = true, bpmMax = true, energyMin = true, durationMax = true, kind = true }
 
 	nextTrack.OnServerInvoke = function(player: Player, filters: any)
 		local now = os.clock()
-		if now - (lastRequest[player] or -math.huge) < 2 then return nil end
+		if now - (lastRequest[player] or -math.huge) < 2 then
+			return nil
+		end
 		lastRequest[player] = now
-		if filters ~= nil and type(filters) ~= "table" then return nil end
+		if filters ~= nil and type(filters) ~= "table" then
+			return nil
+		end
 		local safeFilters = {}
 		if filters then
 			for key, value in filters do
-				if allowed[key] and ((type(value) == "string" and #value <= 60)
-					or (type(value) == "number" and value == value and value >= 0 and value <= 10000)) then
+				if
+					allowed[key]
+					and (
+						(type(value) == "string" and #value <= 60)
+						or (type(value) == "number" and value == value and value >= 0 and value <= 10000)
+					)
+				then
 					safeFilters[key] = value
 				end
 			end
 		end
 		local track = pool:next(safeFilters)
-		if not track then return nil end
+		if not track then
+			return nil
+		end
 		local previous = issued[player]
 		if previous and claimed[previous.id] == player then
 			claimed[previous.id] = nil
-			if active == previous.id then active = nil end
+			if active == previous.id then
+				active = nil
+			end
 		end
 		if active then
 			local owner = claimed[active]
@@ -70,8 +91,11 @@ function Bridge.start(pool: any, observer: any, reporter: any, showReportGui: bo
 				active = nil
 			end
 		end
-		local analyze = observer ~= nil and track.bpm == nil and not attempted[track.id]
-			and active == nil and now - lastAnalysis >= ANALYSIS_INTERVAL
+		local analyze = observer ~= nil
+			and track.bpm == nil
+			and not attempted[track.id]
+			and active == nil
+			and now - lastAnalysis >= ANALYSIS_INTERVAL
 		if analyze then
 			claimed[track.id] = player
 			attempted[track.id] = true
@@ -86,7 +110,9 @@ function Bridge.start(pool: any, observer: any, reporter: any, showReportGui: bo
 		if type(id) ~= "number" or id % 1 ~= 0 or id <= 0 or id > 9007199254740991 then
 			return false, "Enter a valid Roblox audio asset ID."
 		end
-		if (checkCount[player] or 0) >= 10 then return false, "Public audio check limit reached for this session." end
+		if (checkCount[player] or 0) >= 10 then
+			return false, "Public audio check limit reached for this session."
+		end
 		local now = os.clock()
 		if checking[player] or now - (lastCheck[player] or -math.huge) < 2 then
 			return false, "Please wait before checking another ID."
@@ -96,33 +122,62 @@ function Bridge.start(pool: any, observer: any, reporter: any, showReportGui: bo
 		checking[player] = true
 		local ok, eligible, message, asset = pcall(validateAdd, id)
 		checking[player] = nil
-		if not ok then return false, "Public audio check unavailable. Try again later." end
-		if not eligible then return false, message end
-		return true, message, {
-			title = if type(asset) == "table" and type(asset.title) == "string" then asset.title:sub(1, 120) else "",
-			artist = if type(asset) == "table" and type(asset.artist) == "string" then asset.artist:sub(1, 120) else "",
-		}
+		if not ok then
+			return false, "Public audio check unavailable. Try again later."
+		end
+		if not eligible then
+			return false, message
+		end
+		return true,
+			message,
+			{
+				title = if type(asset) == "table" and type(asset.title) == "string"
+					then asset.title:sub(1, 120)
+					else "",
+				artist = if type(asset) == "table" and type(asset.artist) == "string"
+					then asset.artist:sub(1, 120)
+					else "",
+			}
 	end
 
 	submitReport.OnServerInvoke = function(player: Player, item: any)
 		local now = os.clock()
-		if now - (lastReport[player] or -math.huge) < 10 then return false, "Please wait before submitting again." end
-		if validating[player] or now - (lastAttempt[player] or -math.huge) < 2 then return false, "Please wait before trying again." end
+		if now - (lastReport[player] or -math.huge) < 10 then
+			return false, "Please wait before submitting again."
+		end
+		if validating[player] or now - (lastAttempt[player] or -math.huge) < 2 then
+			return false, "Please wait before trying again."
+		end
 		lastAttempt[player] = now
-		if (reportCount[player] or 0) >= 10 then return false, "Report limit reached for this session." end
-		if type(item) ~= "table" then return false, "Invalid report." end
+		if (reportCount[player] or 0) >= 10 then
+			return false, "Report limit reached for this session."
+		end
+		if type(item) ~= "table" then
+			return false, "Invalid report."
+		end
 		local id, kind, note = item.assetId, item.kind, item.note
-		if type(id) ~= "number" or id % 1 ~= 0 or id <= 0 or id > 9007199254740991
+		if
+			type(id) ~= "number"
+			or id % 1 ~= 0
+			or id <= 0
+			or id > 9007199254740991
 			or (kind ~= "metadata" and kind ~= "add" and kind ~= "unavailable")
-			or (note ~= nil and (type(note) ~= "string" or #note > 500)) then
+			or (note ~= nil and (type(note) ~= "string" or #note > 500))
+		then
 			return false, "Invalid track ID or report."
 		end
 		local suggested = nil
 		if item.suggested ~= nil then
-			if kind == "unavailable" or type(item.suggested) ~= "table" then return false, "Invalid suggestion." end
+			if kind == "unavailable" or type(item.suggested) ~= "table" then
+				return false, "Invalid suggestion."
+			end
 			for key in item.suggested do
-				if (kind == "metadata" and key ~= "artworkAssetId" and key ~= "genre")
-					or (kind == "add" and key ~= "title" and key ~= "artist") then return false, "Invalid suggestion." end
+				if
+					(kind == "metadata" and key ~= "artworkAssetId" and key ~= "genre")
+					or (kind == "add" and key ~= "title" and key ~= "artist")
+				then
+					return false, "Invalid suggestion."
+				end
 			end
 			suggested = if kind == "add"
 				then { title = item.suggested.title, artist = item.suggested.artist }
@@ -139,76 +194,129 @@ function Bridge.start(pool: any, observer: any, reporter: any, showReportGui: bo
 			validating[player] = true
 			local ok, eligible, message = pcall(validateAdd, id)
 			validating[player] = nil
-			if not ok then return false, "Public audio check unavailable. Try again later." end
-			if not eligible then return false, message end
+			if not ok then
+				return false, "Public audio check unavailable. Try again later."
+			end
+			if not eligible then
+				return false, message
+			end
 		end
-		if not reporter:report(id, kind, note, suggested) then return false, "Already queued or invalid report." end
+		if not reporter:report(id, kind, note, suggested) then
+			return false, "Already queued or invalid report."
+		end
 		lastReport[player] = os.clock()
 		reportCount[player] = (reportCount[player] or 0) + 1
-		return true, if kind == "add"
-			then "Public Music confirmed. Track request queued for review."
-			else "Report queued for review."
+		return true,
+			if kind == "add"
+				then "Public Music confirmed. Track request queued for review."
+				else "Report queued for review."
 	end
 
-	table.insert(connections, evidence.OnServerEvent:Connect(function(player: Player, item: any)
-		if not observer or type(item) ~= "table" then return end
-		local current = issued[player]
-		if not current or item.assetId ~= current.id then return end
-		if item.failed == true then
-			reporter:report(current.id, "unavailable")
-			if claimed[current.id] == player then
-				claimed[current.id] = nil
-				if active == current.id then active = nil end
+	table.insert(
+		connections,
+		evidence.OnServerEvent:Connect(function(player: Player, item: any)
+			if not observer or type(item) ~= "table" then
+				return
 			end
-			issued[player] = nil
-			return
-		end
-		if type(item.duration) ~= "number" or item.duration ~= item.duration or item.duration <= 0 or item.duration > 36000 then return end
-		local safe: any = { assetId = current.id, duration = item.duration }
-		if item.bpm ~= nil then
-			if not current.analyze or os.clock() - current.at < 20
-				or type(item.bpm) ~= "number" or item.bpm ~= item.bpm or item.bpm < 40 or item.bpm > 250
-				or type(item.bpmConfidence) ~= "number" or item.bpmConfidence ~= item.bpmConfidence or item.bpmConfidence < 0 or item.bpmConfidence > 100
-				or type(item.firstBeatOffset) ~= "number" or item.firstBeatOffset ~= item.firstBeatOffset or item.firstBeatOffset < 0 or item.firstBeatOffset > 60
-				or type(item.features) ~= "table" then return end
-			local count, features = 0, {}
-			for key, value in item.features do
-				count += 1
-				if count > 16 or type(key) ~= "string" or not key:match("^[a-zA-Z][a-zA-Z0-9]*$")
-					or #key > 24 or type(value) ~= "number" or value ~= value or math.abs(value) > 1000000 then return end
-				features[key] = value
+			local current = issued[player]
+			if not current or item.assetId ~= current.id then
+				return
 			end
-			safe.bpm = item.bpm
-			safe.bpmConfidence = item.bpmConfidence
-			safe.firstBeatOffset = item.firstBeatOffset
-			safe.features = features
-		end
-		observer:submit(safe)
-		if item.bpm ~= nil then
-			if claimed[current.id] == player then
-				claimed[current.id] = nil
-				if active == current.id then active = nil end
+			if item.failed == true then
+				reporter:report(current.id, "unavailable")
+				if claimed[current.id] == player then
+					claimed[current.id] = nil
+					if active == current.id then
+						active = nil
+					end
+				end
+				issued[player] = nil
+				return
 			end
-			issued[player] = nil
-		end
-	end))
+			if
+				type(item.duration) ~= "number"
+				or item.duration ~= item.duration
+				or item.duration <= 0
+				or item.duration > 36000
+			then
+				return
+			end
+			local safe: any = { assetId = current.id, duration = item.duration }
+			if item.bpm ~= nil then
+				if
+					not current.analyze
+					or os.clock() - current.at < 20
+					or type(item.bpm) ~= "number"
+					or item.bpm ~= item.bpm
+					or item.bpm < 40
+					or item.bpm > 250
+					or type(item.bpmConfidence) ~= "number"
+					or item.bpmConfidence ~= item.bpmConfidence
+					or item.bpmConfidence < 0
+					or item.bpmConfidence > 100
+					or type(item.firstBeatOffset) ~= "number"
+					or item.firstBeatOffset ~= item.firstBeatOffset
+					or item.firstBeatOffset < 0
+					or item.firstBeatOffset > 60
+					or type(item.features) ~= "table"
+				then
+					return
+				end
+				local count, features = 0, {}
+				for key, value in item.features do
+					count += 1
+					if
+						count > 16
+						or type(key) ~= "string"
+						or not key:match("^[a-zA-Z][a-zA-Z0-9]*$")
+						or #key > 24
+						or type(value) ~= "number"
+						or value ~= value
+						or math.abs(value) > 1000000
+					then
+						return
+					end
+					features[key] = value
+				end
+				safe.bpm = item.bpm
+				safe.bpmConfidence = item.bpmConfidence
+				safe.firstBeatOffset = item.firstBeatOffset
+				safe.features = features
+			end
+			observer:submit(safe)
+			if item.bpm ~= nil then
+				if claimed[current.id] == player then
+					claimed[current.id] = nil
+					if active == current.id then
+						active = nil
+					end
+				end
+				issued[player] = nil
+			end
+		end)
+	)
 
-	table.insert(connections, Players.PlayerRemoving:Connect(function(player: Player)
-		local current = issued[player]
-		if current and claimed[current.id] == player then
-			claimed[current.id] = nil
-			if active == current.id then active = nil end
-		end
-		issued[player] = nil
-		lastRequest[player] = nil
-		lastReport[player] = nil
-		lastAttempt[player] = nil
-		validating[player] = nil
-		lastCheck[player] = nil
-		checking[player] = nil
-		checkCount[player] = nil
-		reportCount[player] = nil
-	end))
+	table.insert(
+		connections,
+		Players.PlayerRemoving:Connect(function(player: Player)
+			local current = issued[player]
+			if current and claimed[current.id] == player then
+				claimed[current.id] = nil
+				if active == current.id then
+					active = nil
+				end
+			end
+			issued[player] = nil
+			lastRequest[player] = nil
+			lastReport[player] = nil
+			lastAttempt[player] = nil
+			validating[player] = nil
+			lastCheck[player] = nil
+			checking[player] = nil
+			checkCount[player] = nil
+			reportCount[player] = nil
+		end)
+	)
 end
 
 return Bridge

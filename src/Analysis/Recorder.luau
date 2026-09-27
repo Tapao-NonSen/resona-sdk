@@ -17,7 +17,9 @@ function Recorder.record(player: AudioPlayer, alive: () -> boolean): any?
 	local deadline = os.clock() + 34
 	while alive() and player.TimePosition < start + 24 and os.clock() < deadline do
 		task.wait(SAMPLE_INTERVAL)
-		if not alive() then break end
+		if not alive() then
+			break
+		end
 		local spectrum = analyzer:GetSpectrum()
 		if #spectrum > 0 then
 			local flux, low, mid, high, weighted, total = 0, 0, 0, 0, 0, 0
@@ -25,10 +27,18 @@ function Recorder.record(player: AudioPlayer, alive: () -> boolean): any?
 				current[index] = math.log(1 + 1000 * value)
 				total += value
 				weighted += index * value
-				if index <= 6 then low += value elseif index <= 85 then mid += value else high += value end
+				if index <= 6 then
+					low += value
+				elseif index <= 85 then
+					mid += value
+				else
+					high += value
+				end
 			end
 			if previous then
-				for index = 1, #spectrum do flux += math.max(0, current[index] - (previous[index] or 0)) end
+				for index = 1, #spectrum do
+					flux += math.max(0, current[index] - (previous[index] or 0))
+				end
 				table.insert(envelope.t, math.floor(player.TimePosition * 1000 + 0.5))
 				table.insert(envelope.f, math.floor(flux * 100 + 0.5) / 100)
 				table.insert(envelope.r, math.floor(analyzer.RmsLevel * 10000 + 0.5))
@@ -42,7 +52,9 @@ function Recorder.record(player: AudioPlayer, alive: () -> boolean): any?
 	end
 	wire:Destroy()
 	analyzer:Destroy()
-	if not alive() or #envelope.t < 100 or player.TimePosition < start + 23 then return nil end
+	if not alive() or #envelope.t < 100 or player.TimePosition < start + 23 then
+		return nil
+	end
 	return envelope
 end
 
