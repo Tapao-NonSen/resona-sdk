@@ -10,6 +10,7 @@ export type Track = {
 	genre: string,
 	duration: number,
 	artworkAssetId: number?,
+	fallbackArtworkAssetId: number?,
 	mood: { string }?,
 	tags: { string }?,
 	bpm: number?,
@@ -33,6 +34,9 @@ export type Filters = {
 	limit: number?,
 }
 export type ReportKind = "unavailable" | "metadata" | "add"
+export type MetadataSuggestion = { artworkAssetId: number?, genre: string? }
+export type AddSuggestion = { title: string, artist: string }
+export type ReportSuggestion = MetadataSuggestion | AddSuggestion
 export type GenreCount = { genre: string, n: number }
 export type BeatInfo = { beat: number?, bar: number? }
 export type Config = {
@@ -40,6 +44,8 @@ export type Config = {
 	baseUrl: string?,
 	httpBudgetPerMin: number?,
 	cacheTtl: number?,
+	contribute: boolean?,
+	showReportGui: boolean?,
 	transport: Transport?,
 }
 export type Meta = { source: "network" | "cache" | "stale" | "seed", error: string? }

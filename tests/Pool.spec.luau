@@ -26,4 +26,15 @@ return {
 		end
 		Expect.truthy(catalog.calls <= 2)
 	end,
+	["caps cached filter pools"] = function()
+		local catalog = {}
+		function catalog:randomPool()
+			return { { id = 1 } }, { source = "network" }
+		end
+		local pool = Pool.new(catalog, 1, 0, function(callback) callback() end)
+		for index = 1, 40 do pool:next({ genre = tostring(index) }) end
+		local count = 0
+		for _ in pool.pools do count += 1 end
+		Expect.equal(count, 32)
+	end,
 }

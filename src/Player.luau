@@ -7,9 +7,11 @@ local Player = {}
 Player.__index = Player
 export type Pool = { next: (self: Pool, filters: Types.Filters?) -> (Types.Track?, Types.Meta) }
 export type Reporter = { report: (self: Reporter, assetId: number, kind: Types.ReportKind, note: string?) -> () }
+export type Observer = { submit: (self: Observer, item: { assetId: number, duration: number }) -> () }
 export type Dependencies = {
 	pool: Pool,
 	reporter: Reporter,
+	observer: Observer?,
 	now: () -> number,
 	wait: (number) -> (),
 	loadTimeout: number,
@@ -112,6 +114,9 @@ function Player:_playNext()
 			dependencies.wait(0.1)
 		end
 		if self.sound.IsLoaded and self.sound.TimeLength > 0 then
+			if dependencies.observer then
+				dependencies.observer:submit({ assetId = track.id, duration = self.sound.TimeLength })
+			end
 			self.failedTracks = 0
 			self:_startBeatClock(track)
 			self.TrackChanged:Fire(track)
@@ -121,7 +126,7 @@ function Player:_playNext()
 		self.failedTracks = (self.failedTracks or 0) + 1
 		if self.failedTracks >= 5 then
 			self.stopped = true
-			warn("Resona: stopped player after 5 unavailable tracks")
+			warn("[Resona] Stopped player after 5 unavailable tracks")
 			return
 		end
 	end

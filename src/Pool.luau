@@ -4,6 +4,7 @@ local Query = require("./Query")
 local Types = require("./Types")
 local Pool = {}
 Pool.__index = Pool
+local MAX_POOLS = 32
 
 export type Catalog = {
 	randomPool: (self: Catalog, filters: Types.Filters?, count: number) -> ({ Types.Track }, Types.Meta),
@@ -45,6 +46,16 @@ end
 function Pool:_fill(key: string, filters: Types.Filters?): Entry
 	local tracks, meta = self.catalog:randomPool(filters, self.size)
 	self:_shuffle(tracks)
+	if not self.pools[key] then
+		local count = 0
+		for oldKey in self.pools do
+			count += 1
+			if count >= MAX_POOLS then
+				self.pools[oldKey] = nil
+				break
+			end
+		end
+	end
 	self.pools[key] = { tracks = tracks, meta = meta, filling = false }
 	return self.pools[key]
 end

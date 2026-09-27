@@ -16,6 +16,8 @@ export type Resolved = {
 	baseUrl: string,
 	httpBudgetPerMin: number,
 	cacheTtl: number,
+	contribute: boolean,
+	showReportGui: boolean,
 	transport: Types.Transport?,
 }
 
@@ -31,11 +33,19 @@ function Config.resolve(input: Types.Config): (Resolved?, string?)
 	if type(ttl) ~= "number" or ttl < 0 then
 		return nil, "cacheTtl must be non-negative"
 	end
+	if input.contribute ~= nil and type(input.contribute) ~= "boolean" then
+		return nil, "contribute must be a boolean"
+	end
+	if input.showReportGui ~= nil and type(input.showReportGui) ~= "boolean" then
+		return nil, "showReportGui must be a boolean"
+	end
 	return {
 		apiKey = input.apiKey,
 		baseUrl = input.baseUrl or Config.BASE_URL,
 		httpBudgetPerMin = budget,
 		cacheTtl = ttl,
+		contribute = input.contribute ~= false,
+		showReportGui = input.showReportGui == true,
 		transport = input.transport,
 	},
 		nil
