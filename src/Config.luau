@@ -3,7 +3,7 @@
 local Types = require("./Types")
 local Config = {}
 
-Config.BASE_URL = "https://resona-api.6ybckvd5ns.workers.dev"
+Config.BASE_URL = "https://resona.nyxbot.app"
 Config.HTTP_BUDGET_PER_MIN = 20
 Config.CACHE_TTL = 3600
 Config.POOL_SIZE = 50
