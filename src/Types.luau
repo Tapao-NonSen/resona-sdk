@@ -34,6 +34,7 @@ export type Filters = {
 }
 export type ReportKind = "unavailable" | "metadata" | "add"
 export type GenreCount = { genre: string, n: number }
+export type BeatInfo = { beat: number?, bar: number? }
 export type Config = {
 	apiKey: string | Secret,
 	baseUrl: string?,

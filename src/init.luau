@@ -21,8 +21,9 @@ export type Transport = Types.Transport
 export type Request = Types.Request
 export type Response = Types.Response
 export type ReportKind = Types.ReportKind
+export type BeatInfo = Types.BeatInfo
 
-local Resona = { VERSION = "0.1.0", Player = Player }
+local Resona = { VERSION = "0.2.0", Player = Player }
 type CatalogApi = {
 	tracks: (self: CatalogApi, filters: Types.Filters?) -> (Types.Page, Types.Meta),
 	get: (self: CatalogApi, id: number) -> (Types.Track?, Types.Meta),
@@ -59,7 +60,14 @@ function Resona.init(input: Types.Config)
 	local pool = Pool.new(catalog, Config.POOL_SIZE, Config.POOL_REFILL_AT)
 	local reporter = Reporter.new(client, RobloxTransport.encode, waitFn, nil, Config.REPORT_INTERVAL)
 	state = { catalog = catalog, pool = pool, reporter = reporter }
-	Player.configure({ pool = pool, reporter = reporter, now = now, wait = waitFn, loadTimeout = Config.LOAD_TIMEOUT })
+	Player.configure({
+		pool = pool,
+		reporter = reporter,
+		now = now,
+		wait = waitFn,
+		loadTimeout = Config.LOAD_TIMEOUT,
+		runService = game:GetService("RunService"),
+	})
 end
 
 local function noteWarning(meta: Types.Meta)

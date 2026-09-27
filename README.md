@@ -5,10 +5,10 @@ that are verified playable, with a real title and artist, genre, mood, BPM and e
 
 Resona only indexes audio that already lives on Roblox. It never hosts, downloads or re-uploads audio.
 
-> **Status:** early development (v0.1.0).
+> **Status:** early development (v0.2.0).
 
 ## Install
-- **Wally:** `resona = "tapao-nonsen/resona@0.1.0"`
+- **Wally:** `resona = "tapao-nonsen/resona@0.2.0"`
 - **Creator Store model:** coming with v1.
 
 You need a free API key. Store it with `HttpService:GetSecret`, never in a script.
@@ -21,6 +21,15 @@ Resona.init({ apiKey = HttpService:GetSecret("resona"), httpBudgetPerMin = 20 })
 
 local tracks, meta = Resona.search("energetic", { genre = "dance", bpmMin = 124, bpmMax = 132 })
 local track = Resona.random({ genre = "electronic" }) -- picks happen locally from a prefetched pool
+```
+
+## Beat sync
+```luau
+local player = Resona.Player.new()
+player.Beat:Connect(function() light.Brightness = 4 end)
+player.Bar:Connect(function(bar) light.Color = colors[bar % #colors + 1] end)
+player:play()
+-- player:getBeatPhase() returns 0..1 for smooth animation between beats.
 ```
 
 ## Project structure

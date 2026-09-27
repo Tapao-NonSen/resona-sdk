@@ -2,6 +2,7 @@
 -- Runs every module spec with compact per-test pass/fail output.
 local process = require("@lune/process")
 local specs = {
+	"BeatClock",
 	"Query",
 	"Cache",
 	"TokenBucket",
