@@ -1,6 +1,6 @@
 # ZYNC nightclub demo
 
-A small Rojo place showing Resona music playback, beat-synced floor tiles, cover art, a Skip button, and the built-in report form. It maps the SDK source from this repository directly, so it works before the Wally release.
+A small Rojo place showing Resona music playback, beat-synced floor tiles, cover art, a Skip button, and the built-in report form. It maps the SDK source from this repository directly, so no Wally install is needed for the example.
 
 1. Create a Roblox API key and store it as the experience secret `resona`.
 2. Enable **HTTP Requests** in the experience and tell players in its privacy notice that playback measurements may be contributed to Resona. To disable contribution, add `contribute = false` to `Resona.init` in `src/ZyncServer.server.luau`.

@@ -23,7 +23,7 @@ local player = Resona.Player.new({ filters = { genre = "electronic" } })
 player:play()
 ```
 
-Version 0.3.0 is in this repository; its Wally package has not been published yet. Put the package where both server and client can require it, such as `ReplicatedStorage`.
+Version 0.3.0 is available on Wally as `tapao-nonsen/resona@0.3.0`. Put the package where both server and client can require it, such as `ReplicatedStorage`.
 
 ## API pages
 

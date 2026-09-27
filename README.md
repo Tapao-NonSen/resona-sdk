@@ -10,7 +10,7 @@ Resona only indexes audio that already lives on Roblox. It never hosts, download
 See the [documentation index](docs/index.md) for a quick start and a separate page for each SDK API.
 
 ## Install
-- **Wally:** `resona = "tapao-nonsen/resona@0.3.0"` after this version is published.
+- **Wally:** `resona = "tapao-nonsen/resona@0.3.0"`.
 - **Creator Store model:** coming with v1.
 
 You need a free API key. Store it with `HttpService:GetSecret`, never in a script. Put the package where both server and client can require it, such as `ReplicatedStorage`.
