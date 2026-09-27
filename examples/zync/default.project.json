@@ -1,0 +1,17 @@
+{
+  "name": "ZYNC Resona Demo",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Resona": { "$path": "../../src" }
+    },
+    "ServerScriptService": {
+      "ZyncServer": { "$path": "src/ZyncServer.server.luau" }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "ZyncClient": { "$path": "src/ZyncClient.client.luau" }
+      }
+    }
+  }
+}

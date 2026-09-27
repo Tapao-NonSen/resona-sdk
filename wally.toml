@@ -7,4 +7,4 @@ authors = ["Tapao"]
 realm = "shared"
 registry = "https://github.com/UpliftGames/wally-index"
 exclude = ["**"]
-include = ["src", "src/**", "default.project.json", "wally.toml", "LICENSE", "README.md"]
+include = ["src", "src/**", "docs", "docs/**", "default.project.json", "wally.toml", "LICENSE", "README.md"]
