@@ -1,0 +1,43 @@
+# Resona SDK
+
+**Stop searching for Roblox music IDs.** Ask for music like "house, 124–132 BPM, energetic" and get tracks
+that are verified playable, with a real title and artist, genre, mood, BPM and energy.
+
+Resona only indexes audio that already lives on Roblox. It never hosts, downloads or re-uploads audio.
+
+> **Status:** early development (v0.1.0). The API below is the planned surface, not the final one.
+
+## Install
+- **Wally:** `resona = "tapao-nonsen/resona@0.1.0"`
+- **Creator Store model:** coming with v1.
+
+You need a free API key. Store it with `HttpService:GetSecret`, never in a script.
+
+## Planned usage
+```luau
+local Resona = require(path.to.Resona)
+
+Resona.init({ apiKey = HttpService:GetSecret("resona"), httpBudgetPerMin = 20 })
+
+local tracks = Resona.search({ genre = "dance", bpmMin = 124, bpmMax = 132, mood = "energetic" })
+Resona.random({ genre = "electronic" }) -- a pool of tracks; picks happen locally, not per request
+```
+
+## Built to respect your HTTP budget
+Roblox gives each game server 500 HTTP requests per minute, **shared with your own game**. Resona aims for
+**≤5 requests/minute** at steady state:
+- Responses are cached for 1h, and concurrent identical calls share one request (single-flight).
+- Random/station calls fetch a pool of 50 and refill in the background.
+- A token bucket enforces `httpBudgetPerMin`. Over budget, you get cached data, not an error.
+- On rate limits or server errors it backs off (1s → 60s, honoring `Retry-After`) and **never throws**.
+- A bundled seed list keeps music playing when HttpEnabled is off or the API is unreachable.
+
+## Development
+```sh
+aftman install          # rojo + wally
+wally install
+rojo serve
+```
+
+## License
+MIT. See [LICENSE](LICENSE).

@@ -1,0 +1,10 @@
+[package]
+name = "tapao-nonsen/resona"
+description = "Verified, playable Roblox music by genre, mood and BPM, within your HTTP budget"
+version = "0.1.0"
+license = "MIT"
+authors = ["Tapao"]
+realm = "shared"
+registry = "https://github.com/UpliftGames/wally-index"
+exclude = ["**"]
+include = ["src", "src/**", "default.project.json", "wally.toml", "LICENSE", "README.md"]
