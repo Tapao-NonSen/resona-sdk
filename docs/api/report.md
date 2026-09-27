@@ -1,5 +1,10 @@
 # `Resona.report`
 
+```luau
+Resona.report(assetId: number, kind: Resona.ReportKind, note: string?, suggested: Resona.ReportSuggestion?)
+    -> (accepted: boolean, message: string?) -- message is returned to LocalScript callers only
+```
+
 Send a track correction or Add Track request from a LocalScript or server Script after [init](init.md). Client calls pass through the game server; the API key stays private.
 
 ```luau

@@ -1,5 +1,9 @@
 # `Resona.get`
 
+```luau
+Resona.get(id: number) -> (Resona.Track?, Resona.Meta)
+```
+
 Look up a single Roblox audio asset ID from a server Script after [initialization](init.md).
 
 ```luau

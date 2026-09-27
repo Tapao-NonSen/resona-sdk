@@ -1,5 +1,9 @@
 # `Resona.genres`
 
+```luau
+Resona.genres() -> ({ Resona.GenreCount }, Resona.Meta)
+```
+
 Build a genre selector from a server Script after [initialization](init.md).
 
 ```luau

@@ -1,5 +1,14 @@
 # `Resona.ServerPlayer`
 
+```luau
+Resona.ServerPlayer.new(options: { filters: Resona.Filters?, parent: Instance?, volume: number? }?) -> ServerPlayer
+
+-- Same methods and signals as Player:
+ServerPlayer:play() / :skip() / :stop() / :destroy() -> ()
+ServerPlayer:getBeatPhase() -> number?
+ServerPlayer.TrackChanged / .Beat / .Bar
+```
+
 Use this older server `Sound` player when server playback is required. Initialize Resona on the server first.
 
 ```luau

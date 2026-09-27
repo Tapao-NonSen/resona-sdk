@@ -1,5 +1,9 @@
 # `Resona.random`
 
+```luau
+Resona.random(filters: Resona.Filters?) -> (Resona.Track?, Resona.Meta)
+```
+
 Get one track for a station or playlist from a server Script after [initialization](init.md).
 
 ```luau

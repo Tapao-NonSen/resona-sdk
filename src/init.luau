@@ -29,8 +29,11 @@ export type ReportKind = Types.ReportKind
 export type MetadataSuggestion = Types.MetadataSuggestion
 export type AddSuggestion = Types.AddSuggestion
 export type BeatInfo = Types.BeatInfo
+export type ReportSuggestion = Types.ReportSuggestion
+export type GenreCount = Types.GenreCount
+export type AddAsset = Types.AddAsset
 
-local Resona = { VERSION = "0.3.0", Player = ClientPlayer, ServerPlayer = Player, ReportGui = ReportGui }
+local Resona = { VERSION = "0.4.0", Player = ClientPlayer, ServerPlayer = Player, ReportGui = ReportGui }
 type CatalogApi = {
 	tracks: (self: CatalogApi, filters: Types.Filters?) -> (Types.Page, Types.Meta),
 	get: (self: CatalogApi, id: number) -> (Types.Track?, Types.Meta),
@@ -183,7 +186,7 @@ function Resona.report(assetId: number, kind: Types.ReportKind, note: string?, s
 	return false
 end
 
-function Resona.checkAdd(assetId: number): (boolean, string, any?)
+function Resona.checkAdd(assetId: number): (boolean, string, Types.AddAsset?)
 	if game:GetService("RunService"):IsClient() then
 		return ReportClient.checkAdd(assetId)
 	end

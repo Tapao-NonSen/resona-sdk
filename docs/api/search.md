@@ -1,5 +1,9 @@
 # `Resona.search`
 
+```luau
+Resona.search(text: string, filters: Resona.Filters?) -> ({ Resona.Track }, Resona.Meta)
+```
+
 Find tracks by title, artist, or album prefix from a server Script after [initialization](init.md).
 
 ```luau

@@ -1,5 +1,9 @@
 # `Resona.checkAdd`
 
+```luau
+Resona.checkAdd(assetId: number) -> (eligible: boolean, message: string, asset: Resona.AddAsset?)
+```
+
 Check a Roblox audio ID before showing an Add Track form. Call from a LocalScript or server Script after [init](init.md).
 
 ```luau

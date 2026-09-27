@@ -1,5 +1,9 @@
 # `Resona.tracks`
 
+```luau
+Resona.tracks(filters: Resona.Filters?) -> (Resona.Page, Resona.Meta)
+```
+
 Browse verified tracks from a server Script after [initialization](init.md).
 
 ```luau

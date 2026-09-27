@@ -38,6 +38,7 @@ export type MetadataSuggestion = { artworkAssetId: number?, genre: string? }
 export type AddSuggestion = { title: string, artist: string }
 export type ReportSuggestion = MetadataSuggestion | AddSuggestion
 export type GenreCount = { genre: string, n: number }
+export type AddAsset = { title: string, artist: string }
 export type BeatInfo = { beat: number?, bar: number? }
 export type Config = {
 	apiKey: string | Secret,

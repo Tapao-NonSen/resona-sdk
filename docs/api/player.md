@@ -1,5 +1,19 @@
 # `Resona.Player`
 
+```luau
+Resona.Player.new(options: { filters: Resona.Filters?, volume: number? }?) -> Player
+
+Player:play() -> ()
+Player:skip() -> ()
+Player:stop() -> ()
+Player:destroy() -> ()
+Player:getBeatPhase() -> number?          -- 0..1 within the current beat
+
+Player.TrackChanged: Signal<(track: Resona.Track)>
+Player.Beat: Signal<(beat: number, track: Resona.Track)>  -- beat index from the first beat
+Player.Bar: Signal<(bar: number, track: Resona.Track)>    -- every 4 beats
+```
+
 Create a music player in a LocalScript after the server calls [init](init.md). Each instance plays through a client `AudioPlayer` and advances when a track ends.
 
 ```luau

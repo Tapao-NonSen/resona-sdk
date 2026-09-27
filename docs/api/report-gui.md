@@ -1,5 +1,9 @@
 # `Resona.ReportGui`
 
+```luau
+Resona.ReportGui.mount() -> ()
+```
+
 The built-in client report form supports genre/artwork, other track details, unavailable audio, and Add Track requests. It auto-fills the current [Player](player.md) audio ID when one is playing.
 
 Enable its button when a client creates `Resona.Player`:

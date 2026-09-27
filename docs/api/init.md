@@ -1,5 +1,9 @@
 # `Resona.init`
 
+```luau
+Resona.init(config: Resona.ConfigInput) -> ()
+```
+
 Call `Resona.init(config)` once from a server Script before clients create players or send reports. It starts the server bridge and holds the API key on the server. Enable HTTP Requests in the experience.
 
 ```luau
