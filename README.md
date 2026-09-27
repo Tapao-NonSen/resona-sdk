@@ -7,7 +7,7 @@ Resona only indexes audio that already lives on Roblox. It never hosts, download
 
 > **Status:** early development (v0.3.0).
 
-See the [SDK guide](docs/guide.md) for setup, playback, catalog calls, reporting, and contribution controls.
+See the [documentation index](docs/index.md) for a quick start and a separate page for each SDK API.
 
 ## Install
 - **Wally:** `resona = "tapao-nonsen/resona@0.3.0"` after this version is published.
