@@ -36,7 +36,7 @@ Version 0.4.0 is available on Wally as `tapao-nonsen/resona@0.4.0`. Put the pack
 | [random](api/random.md) | Pick a track for a station or playlist |
 | [genres](api/genres.md) | Build a genre picker |
 | [Player](api/player.md) | Play music for one client and sync effects to beats |
-| [ServerPlayer](api/server-player.md) | Use the older server `Sound` player |
+| [ServerPlayer](api/server-player.md) | One shared track every player hears |
 | [checkAdd](api/check-add.md) | Check an audio ID before requesting a new catalog track |
 | [report](api/report.md) | Send metadata, unavailable-audio, or Add Track reports |
 | [ReportGui](api/report-gui.md) | Show the built-in report form |

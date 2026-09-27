@@ -1,5 +1,5 @@
 --!strict
--- Server-side Sound playback that skips unavailable tracks and reports them.
+-- Server-side AudioPlayer playback, heard by every player; skips unavailable tracks and reports them.
 local Signal = require("./Signal")
 local Types = require("./Types")
 local BeatClock = require("./BeatClock")
@@ -19,7 +19,8 @@ export type Dependencies = {
 }
 export type Options = { filters: Types.Filters?, parent: Instance?, volume: number? }
 type PlayerState = {
-	sound: Sound?,
+	audio: AudioPlayer?,
+	folder: Folder?,
 	filters: Types.Filters?,
 	stopped: boolean,
 	destroyed: boolean,
@@ -50,11 +51,22 @@ function Player.new(options: Options?): PlayerState
 			Bar = Signal.new(),
 		}, Player)
 	end
-	local sound = Instance.new("Sound")
-	sound.Volume = options.volume or 0.5
-	sound.Parent = options.parent or game:GetService("SoundService")
+	-- AudioDeviceOutput with no Player set is heard by everyone (checked in Studio 2026-09-28).
+	local folder = Instance.new("Folder")
+	folder.Name = "ResonaServerPlayer"
+	local audio = Instance.new("AudioPlayer")
+	audio.Volume = options.volume or 0.5
+	audio.Parent = folder
+	local output = Instance.new("AudioDeviceOutput")
+	output.Parent = folder
+	local wire = Instance.new("Wire")
+	wire.SourceInstance = audio
+	wire.TargetInstance = output
+	wire.Parent = folder
+	folder.Parent = options.parent or game:GetService("SoundService")
 	local player: PlayerState = setmetatable({
-		sound = sound,
+		audio = audio,
+		folder = folder,
 		filters = options.filters,
 		stopped = true,
 		destroyed = false,
@@ -63,7 +75,7 @@ function Player.new(options: Options?): PlayerState
 		Beat = Signal.new(),
 		Bar = Signal.new(),
 	}, Player)
-	player.endedConnection = sound.Ended:Connect(function()
+	player.endedConnection = audio.Ended:Connect(function()
 		if not player.stopped and not player.destroyed then
 			player:_playNext()
 		end
@@ -81,13 +93,13 @@ end
 
 function Player:_startBeatClock(track: Types.Track)
 	self:_stopBeatClock()
-	if not dependencies or not self.sound then
+	if not dependencies or not self.audio then
 		return
 	end
 	local clock = BeatClock.new(track.bpm, track.firstBeatOffset or 0)
 	self.beatClock = clock
 	self.heartbeatConnection = dependencies.runService.Heartbeat:Connect(function()
-		local event = clock:tick((self.sound :: Sound).TimePosition)
+		local event = clock:tick((self.audio :: AudioPlayer).TimePosition)
 		if event.beat ~= nil then
 			self.Beat:Fire(event.beat, track)
 		end
@@ -98,7 +110,7 @@ function Player:_startBeatClock(track: Types.Track)
 end
 
 function Player:_playNext()
-	if not dependencies or not self.sound then
+	if not dependencies or not self.audio then
 		return
 	end
 	self:_stopBeatClock()
@@ -107,15 +119,21 @@ function Player:_playNext()
 		if not track then
 			return
 		end
-		self.sound.SoundId = "rbxassetid://" .. tostring(track.id)
-		self.sound:Play()
+		local audio = self.audio :: AudioPlayer
+		audio:Stop()
+		audio.Asset = "rbxassetid://" .. tostring(track.id)
 		local started = dependencies.now()
-		while not self.sound.IsLoaded and dependencies.now() - started < dependencies.loadTimeout do
+		while not audio.IsReady and dependencies.now() - started < dependencies.loadTimeout do
 			dependencies.wait(0.1)
 		end
-		if self.sound.IsLoaded and self.sound.TimeLength > 0 then
+		if self.stopped or self.destroyed then
+			return
+		end
+		if audio.IsReady and audio.TimeLength > 0 then
+			audio.TimePosition = 0
+			audio:Play()
 			if dependencies.observer then
-				dependencies.observer:submit({ assetId = track.id, duration = self.sound.TimeLength })
+				dependencies.observer:submit({ assetId = track.id, duration = audio.TimeLength })
 			end
 			self.failedTracks = 0
 			self:_startBeatClock(track)
@@ -141,7 +159,7 @@ function Player:play()
 end
 function Player:skip()
 	if not self.destroyed and not self.unavailable then
-		self.sound:Stop()
+		(self.audio :: AudioPlayer):Stop()
 		self.stopped = false
 		self:_playNext()
 	end
@@ -149,8 +167,8 @@ end
 function Player:stop()
 	self.stopped = true
 	self:_stopBeatClock()
-	if self.sound then
-		self.sound:Stop()
+	if self.audio then
+		self.audio:Stop()
 	end
 end
 function Player:destroy()
@@ -164,16 +182,16 @@ function Player:destroy()
 		self.endedConnection:Disconnect()
 		self.endedConnection = nil
 	end
-	if self.sound then
-		self.sound:Destroy()
+	if self.folder then
+		self.folder:Destroy()
 	end
 end
 
 function Player:getBeatPhase(): number?
-	if not self.beatClock or not self.sound then
+	if not self.beatClock or not self.audio then
 		return nil
 	end
-	local _, phase = self.beatClock:beatAt(self.sound.TimePosition)
+	local _, phase = self.beatClock:beatAt(self.audio.TimePosition)
 	return phase
 end
 

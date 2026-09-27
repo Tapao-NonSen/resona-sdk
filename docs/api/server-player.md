@@ -9,7 +9,7 @@ ServerPlayer:getBeatPhase() -> number?
 ServerPlayer.TrackChanged / .Beat / .Bar
 ```
 
-Use this older server `Sound` player when server playback is required. Initialize Resona on the server first.
+Plays one shared track that every player hears, from a server `AudioPlayer` wired to an `AudioDeviceOutput` in a `ResonaServerPlayer` folder (under `parent`, default `SoundService`). Initialize Resona on the server first.
 
 ```luau
 local Resona = require(game.ReplicatedStorage.Packages.Resona)
@@ -24,4 +24,4 @@ end)
 player:play()
 ```
 
-It supports `play()`, `skip()`, `stop()`, `destroy()`, `getBeatPhase()`, and `TrackChanged`, `Beat`, and `Bar` signals; a track without BPM ticks at 128 BPM. Its `Sound` reports a successful play's duration when contribution is enabled, but it cannot collect spectrum measurements for BPM. Use the client [Player](player.md) for analysis of audible playback.
+It supports `play()`, `skip()`, `stop()`, `destroy()`, `getBeatPhase()`, and `TrackChanged`, `Beat`, and `Bar` signals; a track without BPM ticks at 128 BPM. It reports a successful play's duration when contribution is enabled. Servers render no audio, so it cannot measure BPM. Use the client [Player](player.md) for analysis of audible playback.
