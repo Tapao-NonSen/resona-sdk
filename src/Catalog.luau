@@ -10,17 +10,18 @@ type TracksResponse = Types.Page
 type SearchResponse = { tracks: { Types.Track } }
 type GenresResponse = { genres: { Types.GenreCount } }
 type RandomResponse = { tracks: { Types.Track } }
-type CatalogState = { client: Client, decode: (string) -> unknown, seed: { Types.Track } }
+type CatalogState =
+	{ client: Client, decode: (string) -> unknown, seed: { Types.Track }, warned: { [string]: boolean } }
 
 function Catalog.new(client: Client, jsonDecode: (string) -> unknown, seed: { Types.Track }): CatalogState
-	return setmetatable({ client = client, decode = jsonDecode, seed = seed }, Catalog)
+	return setmetatable({ client = client, decode = jsonDecode, seed = seed, warned = {} }, Catalog)
 end
 
 function Catalog:_seed(filters: Types.Filters?): { Types.Track }
 	local tracks: { Types.Track } = {}
 	for _, track in self.seed do
 		if
-			(not filters or not filters.genre or track.genre == filters.genre)
+			(not filters or not filters.genre or track.genre:lower() == filters.genre:lower())
 			and (not filters or not filters.durationMax or track.duration <= filters.durationMax)
 		then
 			table.insert(tracks, track)
@@ -42,6 +43,20 @@ function Catalog:_get(path: string, fallback: unknown): (unknown, Types.Meta)
 	return fallback, meta
 end
 
+-- An empty genre query comes back with genres that do have tracks: expose them and warn once per genre.
+function Catalog:_suggest(value: any, meta: Types.Meta, filters: Types.Filters?)
+	local suggested = if type(value) == "table" then value.suggestedGenres else nil
+	if type(suggested) ~= "table" or #suggested == 0 then
+		return
+	end
+	meta.suggestedGenres = suggested
+	local genre = if filters and filters.genre then filters.genre else ""
+	if not self.warned[genre] then
+		self.warned[genre] = true
+		warn(`[Resona] No tracks for genre "{genre}"; available: {table.concat(suggested, ", ")}`)
+	end
+end
+
 local function withQuery(path: string, filters: Types.Filters?): string
 	local query = Query.build(filters)
 	return path .. (if query == "" then "" else "?" .. query)
@@ -49,6 +64,7 @@ end
 
 function Catalog:tracks(filters: Types.Filters?): (Types.Page, Types.Meta)
 	local value, meta = self:_get(withQuery("/v1/tracks", filters), { tracks = self:_seed(filters), next = nil })
+	self:_suggest(value, meta, filters)
 	return value :: TracksResponse, meta
 end
 
@@ -81,6 +97,7 @@ function Catalog:randomPool(filters: Types.Filters?, count: number): ({ Types.Tr
 	local query = table.clone(filters or {})
 	query.count = count
 	local value, meta = self:_get(withQuery("/v1/random", query), { tracks = self:_seed(filters) })
+	self:_suggest(value, meta, filters)
 	return (value :: RandomResponse).tracks or {}, meta
 end
 

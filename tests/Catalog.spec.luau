@@ -27,4 +27,18 @@ return {
 		Expect.equal(fallback.tracks[1].id, 1)
 		Expect.equal(meta.source, "seed")
 	end,
+	["exposes suggested genres for an empty genre"] = function()
+		local client = {}
+		function client:request(_method: string, _path: string)
+			return "encoded", { source = "network" }
+		end
+		local catalog = Catalog.new(client, function()
+			return { tracks = {}, suggestedGenres = { "pop", "rock" } }
+		end, {})
+		local tracks, meta = catalog:randomPool({ genre = "jazz" }, 10)
+		Expect.equal(#tracks, 0)
+		Expect.deepEqual(meta.suggestedGenres, { "pop", "rock" })
+		local _, pageMeta = catalog:tracks({ genre = "jazz" })
+		Expect.deepEqual(pageMeta.suggestedGenres, { "pop", "rock" })
+	end,
 }

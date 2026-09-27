@@ -30,7 +30,7 @@ type Track = {
 }
 
 type Filters = {
-    genre: string?,
+    genre: string?,                    -- case-insensitive; also matches tags such as "phonk"
     mood: string?,
     bpmMin: number?,
     bpmMax: number?,
@@ -41,7 +41,11 @@ type Filters = {
     limit: number?,                    -- tracks() and search() only
 }
 
-type Meta = { source: "network" | "cache" | "stale" | "seed", error: string? }
+type Meta = {
+    source: "network" | "cache" | "stale" | "seed",
+    error: string?,
+    suggestedGenres: { string }?,      -- set when a genre filter matched nothing
+}
 type Page = { tracks: { Track }, next: number? }
 type GenreCount = { genre: string, n: number }
 

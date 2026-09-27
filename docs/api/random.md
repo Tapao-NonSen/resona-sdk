@@ -14,4 +14,4 @@ if track then
 end
 ```
 
-Returns `Track?` and [meta](types.md). The SDK fetches a pool and makes picks locally, reducing API requests. Pool entries are refilled as needed. Pass the same [catalog filters](tracks.md) for consistent station picks. For actual playback, [Player](player.md) handles choosing and advancing tracks.
+Returns `Track?` and [meta](types.md). The SDK fetches a pool and makes picks locally, reducing API requests. Pool entries are refilled as needed. Pass the same [catalog filters](tracks.md) for consistent station picks. For actual playback, [Player](player.md) handles choosing and advancing tracks. If the genre matches nothing, the track is `nil` and `meta.suggestedGenres` lists genres that do have tracks.

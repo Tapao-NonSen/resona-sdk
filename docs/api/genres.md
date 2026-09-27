@@ -14,4 +14,4 @@ for _, item in genres do
 end
 ```
 
-Returns `{ { genre = string, n = number } }` and [meta](types.md). `n` is the number of matching catalog tracks. Use a selected genre with [tracks](tracks.md), [random](random.md), or [Player](player.md).
+Returns `{ { genre = string, n = number } }` and [meta](types.md). `n` is the number of matching catalog tracks; spellings that differ only by case are merged. Use these values for `genre` filters. Use a selected genre with [tracks](tracks.md), [random](random.md), or [Player](player.md).

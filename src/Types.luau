@@ -49,7 +49,7 @@ export type Config = {
 	showReportGui: boolean?,
 	transport: Transport?,
 }
-export type Meta = { source: "network" | "cache" | "stale" | "seed", error: string? }
+export type Meta = { source: "network" | "cache" | "stale" | "seed", error: string?, suggestedGenres: { string }? }
 export type Page = { tracks: { Track }, next: number? }
 export type Request = { method: string, url: string, headers: { [string]: string | Secret }?, body: string? }
 export type Response =
