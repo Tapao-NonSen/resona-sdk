@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Resona = require(ReplicatedStorage:WaitForChild("Resona"))
 
-local player = Resona.Player.new({ filters = { kind = "library" }, volume = 0.35 })
+local player = Resona.Player.new({ volume = 0.35 })
 local lights = workspace:WaitForChild("ZyncLights")
 local tiles = {}
 for i = 1, 8 do
