@@ -5,7 +5,7 @@ that are verified playable, with a real title and artist, genre, mood, BPM and e
 
 Resona only indexes audio that already lives on Roblox. It never hosts, downloads or re-uploads audio.
 
-> **Status:** early development (v0.1.0). The API below is the planned surface, not the final one.
+> **Status:** early development (v0.1.0).
 
 ## Install
 - **Wally:** `resona = "tapao-nonsen/resona@0.1.0"`
@@ -13,15 +13,22 @@ Resona only indexes audio that already lives on Roblox. It never hosts, download
 
 You need a free API key. Store it with `HttpService:GetSecret`, never in a script.
 
-## Planned usage
+## Usage
 ```luau
 local Resona = require(path.to.Resona)
 
 Resona.init({ apiKey = HttpService:GetSecret("resona"), httpBudgetPerMin = 20 })
 
-local tracks = Resona.search({ genre = "dance", bpmMin = 124, bpmMax = 132, mood = "energetic" })
-Resona.random({ genre = "electronic" }) -- a pool of tracks; picks happen locally, not per request
+local tracks, meta = Resona.search("energetic", { genre = "dance", bpmMin = 124, bpmMax = 132 })
+local track = Resona.random({ genre = "electronic" }) -- picks happen locally from a prefetched pool
 ```
+
+## Project structure
+
+- `src/init.luau` is the public facade.
+- `src/Http/` contains the request pipeline and Roblox HTTP adapter.
+- `src/Catalog.luau`, `Pool.luau`, `Reporter.luau`, and `Player.luau` provide the SDK features.
+- `tests/` contains deterministic Lune specs and fakes.
 
 ## Built to respect your HTTP budget
 Roblox gives each game server 500 HTTP requests per minute, **shared with your own game**. Resona aims for
@@ -34,9 +41,9 @@ Roblox gives each game server 500 HTTP requests per minute, **shared with your o
 
 ## Development
 ```sh
-aftman install          # rojo + wally
+aftman install
 wally install
-rojo serve
+lune run tests/run
 ```
 
 ## License
