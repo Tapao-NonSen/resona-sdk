@@ -40,6 +40,7 @@ export type ReportSuggestion = MetadataSuggestion | AddSuggestion
 export type GenreCount = { genre: string, n: number }
 export type AddAsset = { title: string, artist: string }
 export type BeatInfo = { beat: number?, bar: number? }
+export type Disallow = { genres: { string }?, uploaderIds: { number }?, assetIds: { number }? }
 export type Config = {
 	apiKey: string | Secret,
 	baseUrl: string?,
@@ -47,6 +48,7 @@ export type Config = {
 	cacheTtl: number?,
 	contribute: boolean?,
 	showReportGui: boolean?,
+	disallow: Disallow?,
 	transport: Transport?,
 }
 export type Meta = { source: "network" | "cache" | "stale" | "seed", error: string?, suggestedGenres: { string }? }

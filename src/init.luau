@@ -29,6 +29,7 @@ export type ReportKind = Types.ReportKind
 export type MetadataSuggestion = Types.MetadataSuggestion
 export type AddSuggestion = Types.AddSuggestion
 export type BeatInfo = Types.BeatInfo
+export type Disallow = Types.Disallow
 export type ReportSuggestion = Types.ReportSuggestion
 export type GenreCount = Types.GenreCount
 export type AddAsset = Types.AddAsset
@@ -83,7 +84,7 @@ function Resona.init(input: Types.Config)
 		baseUrl = resolved.baseUrl,
 		apiKey = resolved.apiKey,
 	})
-	local catalog = Catalog.new(client, RobloxTransport.decode, Seed)
+	local catalog = Catalog.new(client, RobloxTransport.decode, Seed, resolved.disallow)
 	local pool = Pool.new(catalog, Config.POOL_SIZE, Config.POOL_REFILL_AT)
 	local reporter = Reporter.new(client, RobloxTransport.encode, waitFn, nil, Config.REPORT_INTERVAL)
 	local observer = if resolved.contribute then Observer.new(client, RobloxTransport.encode, waitFn, nil) else nil

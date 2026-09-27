@@ -10,11 +10,51 @@ type TracksResponse = Types.Page
 type SearchResponse = { tracks: { Types.Track } }
 type GenresResponse = { genres: { Types.GenreCount } }
 type RandomResponse = { tracks: { Types.Track } }
-type CatalogState =
-	{ client: Client, decode: (string) -> unknown, seed: { Types.Track }, warned: { [string]: boolean } }
+export type Disallowed = { genres: { [string]: boolean }, assetIds: { [number]: boolean }, uploaderIds: string? }
+type CatalogState = {
+	client: Client,
+	decode: (string) -> unknown,
+	seed: { Types.Track },
+	warned: { [string]: boolean },
+	disallow: Disallowed,
+}
 
-function Catalog.new(client: Client, jsonDecode: (string) -> unknown, seed: { Types.Track }): CatalogState
-	return setmetatable({ client = client, decode = jsonDecode, seed = seed, warned = {} }, Catalog)
+function Catalog.new(
+	client: Client,
+	jsonDecode: (string) -> unknown,
+	seed: { Types.Track },
+	disallow: Disallowed?
+): CatalogState
+	return setmetatable({
+		client = client,
+		decode = jsonDecode,
+		seed = seed,
+		warned = {},
+		disallow = disallow or { genres = {}, assetIds = {}, uploaderIds = nil },
+	}, Catalog)
+end
+
+-- The game's disallow list: genres and asset IDs are dropped here; uploaders are filtered by the API.
+function Catalog:_allowed(track: any): boolean
+	return type(track) == "table"
+		and not self.disallow.assetIds[track.id]
+		and not (type(track.genre) == "string" and self.disallow.genres[track.genre:lower()])
+end
+
+function Catalog:_keep(tracks: any): { Types.Track }
+	local kept = {}
+	for _, track in if type(tracks) == "table" then tracks else {} do
+		if self:_allowed(track) then
+			table.insert(kept, track)
+		end
+	end
+	return kept
+end
+
+function Catalog:_query(filters: any): any
+	local query = table.clone(filters or {})
+	query.excludeUploaders = self.disallow.uploaderIds
+	return query
 end
 
 function Catalog:_seed(filters: Types.Filters?): { Types.Track }
@@ -23,6 +63,7 @@ function Catalog:_seed(filters: Types.Filters?): { Types.Track }
 		if
 			(not filters or not filters.genre or track.genre:lower() == filters.genre:lower())
 			and (not filters or not filters.durationMax or track.duration <= filters.durationMax)
+			and self:_allowed(track)
 		then
 			table.insert(tracks, track)
 		end
@@ -63,9 +104,13 @@ local function withQuery(path: string, filters: Types.Filters?): string
 end
 
 function Catalog:tracks(filters: Types.Filters?): (Types.Page, Types.Meta)
-	local value, meta = self:_get(withQuery("/v1/tracks", filters), { tracks = self:_seed(filters), next = nil })
+	local value: any, meta =
+		self:_get(withQuery("/v1/tracks", self:_query(filters)), { tracks = self:_seed(filters), next = nil })
 	self:_suggest(value, meta, filters)
-	return value :: TracksResponse, meta
+	if type(value) ~= "table" then
+		value = { tracks = {}, next = nil }
+	end
+	return { tracks = self:_keep(value.tracks), next = value.next } :: TracksResponse, meta
 end
 
 function Catalog:get(id: number): (Types.Track?, Types.Meta)
@@ -76,29 +121,35 @@ function Catalog:get(id: number): (Types.Track?, Types.Meta)
 			break
 		end
 	end
-	local value, meta = self:_get("/v1/tracks/" .. tostring(id), fallback)
-	return value :: Types.Track?, meta
+	local value, meta = self:_get(withQuery("/v1/tracks/" .. tostring(id), self:_query(nil)), fallback)
+	return if self:_allowed(value) then value :: Types.Track? else nil, meta
 end
 
 function Catalog:search(text: string, filters: Types.Filters?): ({ Types.Track }, Types.Meta)
-	local query = table.clone(filters or {})
+	local query = self:_query(filters)
 	query.q = text
-	local value, meta = self:_get(withQuery("/v1/search", query), { tracks = self:_seed(filters) })
-	return (value :: SearchResponse).tracks or {}, meta
+	local value: any, meta = self:_get(withQuery("/v1/search", query), { tracks = self:_seed(filters) })
+	return self:_keep(if type(value) == "table" then value.tracks else nil), meta
 end
 
 function Catalog:genres(kind: string?): ({ Types.GenreCount }, Types.Meta)
 	local value, meta =
 		self:_get(withQuery("/v1/genres", { kind = kind }), { genres = { { genre = "electronic", n = #self.seed } } })
-	return (value :: GenresResponse).genres or {}, meta
+	local kept = {}
+	for _, item in (value :: GenresResponse).genres or {} do
+		if not (type(item.genre) == "string" and self.disallow.genres[item.genre:lower()]) then
+			table.insert(kept, item)
+		end
+	end
+	return kept, meta
 end
 
 function Catalog:randomPool(filters: Types.Filters?, count: number): ({ Types.Track }, Types.Meta)
-	local query = table.clone(filters or {})
+	local query = self:_query(filters)
 	query.count = count
-	local value, meta = self:_get(withQuery("/v1/random", query), { tracks = self:_seed(filters) })
+	local value: any, meta = self:_get(withQuery("/v1/random", query), { tracks = self:_seed(filters) })
 	self:_suggest(value, meta, filters)
-	return (value :: RandomResponse).tracks or {}, meta
+	return self:_keep(if type(value) == "table" then value.tracks else nil), meta
 end
 
 return Catalog

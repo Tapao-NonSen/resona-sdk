@@ -12,7 +12,7 @@ local ReportGui = require("./ReportGui")
 local ClientPlayer = {}
 ClientPlayer.__index = ClientPlayer
 
-export type Options = { filters: any?, volume: number? }
+export type Options = { filters: any?, volume: number?, autoplay: boolean? }
 
 function ClientPlayer.new(options: Options?)
 	options = options or {}
@@ -21,7 +21,9 @@ function ClientPlayer.new(options: Options?)
 		destroyed = false,
 		generation = 0,
 		filters = options.filters,
+		autoplay = options.autoplay ~= false,
 		failedTracks = 0,
+		seeks = 0,
 		TrackChanged = Signal.new(),
 		Beat = Signal.new(),
 		Bar = Signal.new(),
@@ -57,8 +59,13 @@ function ClientPlayer.new(options: Options?)
 	wire.TargetInstance = output
 	wire.Parent = folder
 	self.ended = player.Ended:Connect(function()
-		if not self.stopped and not self.destroyed then
+		if self.stopped or self.destroyed then
+			return
+		end
+		if self.autoplay then
 			self:_playNext()
+		else
+			self:destroy()
 		end
 	end)
 	return self
@@ -141,9 +148,10 @@ function ClientPlayer:_playNext()
 		self.evidence:FireServer({ assetId = track.id, duration = self.audioPlayer.TimeLength })
 	end
 	if result.analyze then
+		local seeks = self.seeks
 		task.spawn(function()
 			local envelope = Recorder.record(self.audioPlayer, function()
-				return generation == self.generation and not self.stopped and not self.destroyed
+				return generation == self.generation and seeks == self.seeks and not self.stopped and not self.destroyed
 			end)
 			if not envelope then
 				return
@@ -151,7 +159,7 @@ function ClientPlayer:_playNext()
 			local valid, estimate, features = pcall(function()
 				local bpm, onset = Estimator.estimateBpm(envelope, function()
 					task.wait()
-					if generation ~= self.generation or self.stopped or self.destroyed then
+					if generation ~= self.generation or seeks ~= self.seeks or self.stopped or self.destroyed then
 						error("cancelled")
 					end
 				end)
@@ -214,6 +222,19 @@ function ClientPlayer:destroy()
 		self.folder:Destroy()
 	end
 end
+-- Jump within the current track. Cancels a running analysis: its envelope assumes unbroken playback.
+function ClientPlayer:seek(position: number)
+	if self.unavailable or self.destroyed or self.audioPlayer.TimeLength <= 0 then
+		return
+	end
+	self.seeks += 1
+	self.audioPlayer.TimePosition = math.clamp(position, 0, self.audioPlayer.TimeLength)
+end
+-- true: advance when a track ends; false: stop and destroy when it ends.
+function ClientPlayer:setAutoplay(enabled: boolean)
+	self.autoplay = enabled == true
+end
+
 function ClientPlayer:getBeatPhase(): number?
 	if not self.clock then
 		return nil

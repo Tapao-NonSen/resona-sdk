@@ -55,6 +55,8 @@ type AddSuggestion = { title: string, artist: string }
 type ReportSuggestion = MetadataSuggestion | AddSuggestion
 type AddAsset = { title: string, artist: string }
 
+type Disallow = { genres: { string }?, uploaderIds: { number }?, assetIds: { number }? }
+
 type ConfigInput = {
     apiKey: string | Secret,
     baseUrl: string?,
@@ -62,6 +64,7 @@ type ConfigInput = {
     cacheTtl: number?,                 -- seconds
     contribute: boolean?,
     showReportGui: boolean?,
+    disallow: Disallow?,               -- see init
     transport: Transport?,             -- custom HTTP transport; defaults to HttpService
 }
 ```

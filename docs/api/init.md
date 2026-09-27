@@ -25,6 +25,22 @@ Resona.init({
 | `cacheTtl` | `3600` seconds | Catalog response cache lifetime |
 | `contribute` | `true` | Automatic playback observations |
 | `showReportGui` | `false` | Show the report button with a client `Player` |
+| `disallow` | none | Tracks this game must never receive; see below |
+
+## Disallowing tracks
+
+```luau
+Resona.init({
+    apiKey = HttpService:GetSecret("resona"),
+    disallow = {
+        genres = { "phonk", "drill" },    -- case-insensitive
+        uploaderIds = { 123456789 },      -- Creator Store uploader user IDs (max 100)
+        assetIds = { 1835133008 },        -- specific audio IDs (max 10000)
+    },
+})
+```
+
+Every catalog call, `Player`, and `ServerPlayer` skip disallowed tracks. `get` returns `nil` for a disallowed track, and `genres` leaves disallowed genres out. Genres and audio IDs are filtered in the SDK, including the offline seed fallback. Uploader IDs are sent to the API, which filters by them without ever returning uploader IDs; seed fallback tracks carry no uploader, so they are not uploader-filtered. Filtering happens after a pool is fetched, so a long disallow list can make pools smaller.
 
 The SDK caches responses, shares concurrent identical requests, and backs off on rate limits. Catalog calls return a result and [source metadata](types.md) for network failures. Use `contribute = false` to disable automatic observations while keeping playback and manual reports.
 

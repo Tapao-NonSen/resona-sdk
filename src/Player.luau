@@ -1,8 +1,12 @@
 --!strict
 -- Server-side AudioPlayer playback, heard by every player; skips unavailable tracks and reports them.
+-- Created in a LocalScript, it follows that shared track instead, with the same signals.
 local Signal = require("./Signal")
 local Types = require("./Types")
 local BeatClock = require("./BeatClock")
+local ReportGui = require("./ReportGui")
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
 local Player = {}
 Player.__index = Player
 export type Pool = { next: (self: Pool, filters: Types.Filters?) -> (Types.Track?, Types.Meta) }
@@ -17,14 +21,16 @@ export type Dependencies = {
 	loadTimeout: number,
 	runService: { Heartbeat: { Connect: (self: any, listener: (number) -> ()) -> RBXScriptConnection } },
 }
-export type Options = { filters: Types.Filters?, parent: Instance?, volume: number? }
+export type Options = { filters: Types.Filters?, parent: Instance?, volume: number?, autoplay: boolean? }
 type PlayerState = {
 	audio: AudioPlayer?,
 	folder: Folder?,
 	filters: Types.Filters?,
+	autoplay: boolean?,
 	stopped: boolean,
 	destroyed: boolean,
 	unavailable: boolean?,
+	following: boolean?,
 	failedTracks: number?,
 	endedConnection: RBXScriptConnection?,
 	heartbeatConnection: RBXScriptConnection?,
@@ -41,6 +47,9 @@ end
 
 function Player.new(options: Options?): PlayerState
 	options = options or {}
+	if RunService:IsClient() then
+		return Player._follow(options)
+	end
 	if not dependencies then
 		return setmetatable({
 			stopped = true,
@@ -68,6 +77,7 @@ function Player.new(options: Options?): PlayerState
 		audio = audio,
 		folder = folder,
 		filters = options.filters,
+		autoplay = options.autoplay ~= false,
 		stopped = true,
 		destroyed = false,
 		failedTracks = 0,
@@ -76,8 +86,76 @@ function Player.new(options: Options?): PlayerState
 		Bar = Signal.new(),
 	}, Player)
 	player.endedConnection = audio.Ended:Connect(function()
-		if not player.stopped and not player.destroyed then
+		if player.stopped or player.destroyed then
+			return
+		end
+		if player.autoplay then
 			player:_playNext()
+		else
+			player:destroy()
+		end
+	end)
+	return player
+end
+
+-- Client side: mirror the server player's track (the "Track" attribute) and replicated TimePosition.
+function Player._follow(options: Options): PlayerState
+	local player: PlayerState = setmetatable({
+		stopped = true,
+		destroyed = false,
+		unavailable = true,
+		following = true,
+		TrackChanged = Signal.new(),
+		Beat = Signal.new(),
+		Bar = Signal.new(),
+	}, Player)
+	task.spawn(function()
+		local parent = options.parent or game:GetService("SoundService")
+		local bridge = game:GetService("ReplicatedStorage"):FindFirstChild("ResonaBridge")
+		local showGui = bridge ~= nil and bridge:GetAttribute("ShowReportGui") == true
+		if showGui then
+			ReportGui.mount()
+		end
+		-- Attach to each server player the server creates, and go quiet while there is none.
+		while not player.destroyed do
+			local folder = parent:FindFirstChild("ResonaServerPlayer")
+			while not folder and not player.destroyed do
+				parent.ChildAdded:Wait()
+				folder = parent:FindFirstChild("ResonaServerPlayer")
+			end
+			local audio = folder and folder:WaitForChild("AudioPlayer", 10) :: AudioPlayer?
+			if player.destroyed or not folder or not audio then
+				return
+			end
+			player.audio = audio
+			local function onTrack()
+				local raw = folder:GetAttribute("Track")
+				local ok, track = pcall(HttpService.JSONDecode, HttpService, raw)
+				if type(raw) == "string" and ok and type(track) == "table" then
+					player:_startBeatClock(track)
+					player.TrackChanged:Fire(track)
+				else
+					player:_stopBeatClock()
+					track = nil
+				end
+				if showGui then
+					ReportGui.setTrack(track)
+				end
+			end
+			player.endedConnection = folder:GetAttributeChangedSignal("Track"):Connect(onTrack)
+			onTrack()
+			while folder.Parent == parent and not player.destroyed do
+				folder.AncestryChanged:Wait()
+			end
+			if player.endedConnection then
+				player.endedConnection:Disconnect()
+				player.endedConnection = nil
+			end
+			player:_stopBeatClock()
+			player.audio = nil
+			if showGui then
+				ReportGui.setTrack(nil)
+			end
 		end
 	end)
 	return player
@@ -93,12 +171,13 @@ end
 
 function Player:_startBeatClock(track: Types.Track)
 	self:_stopBeatClock()
-	if not dependencies or not self.audio then
+	if not self.audio then
 		return
 	end
 	local clock = BeatClock.new(track.bpm, track.firstBeatOffset or 0)
 	self.beatClock = clock
-	self.heartbeatConnection = dependencies.runService.Heartbeat:Connect(function()
+	local runService = if dependencies then dependencies.runService else RunService
+	self.heartbeatConnection = runService.Heartbeat:Connect(function()
 		local event = clock:tick((self.audio :: AudioPlayer).TimePosition)
 		if event.beat ~= nil then
 			self.Beat:Fire(event.beat, track)
@@ -136,6 +215,7 @@ function Player:_playNext()
 				dependencies.observer:submit({ assetId = track.id, duration = audio.TimeLength })
 			end
 			self.failedTracks = 0
+			(self.folder :: Folder):SetAttribute("Track", HttpService:JSONEncode(track))
 			self:_startBeatClock(track)
 			self.TrackChanged:Fire(track)
 			return
@@ -165,11 +245,25 @@ function Player:skip()
 	end
 end
 function Player:stop()
+	if self.following then
+		return
+	end
 	self.stopped = true
 	self:_stopBeatClock()
 	if self.audio then
 		self.audio:Stop()
 	end
+	if self.folder then
+		self.folder:SetAttribute("Track", nil)
+	end
+end
+-- Jump within the current track; clients follow the replicated position.
+function Player:seek(position: number)
+	local audio = self.audio
+	if self.unavailable or self.destroyed or not audio or audio.TimeLength <= 0 then
+		return
+	end
+	audio.TimePosition = math.clamp(position, 0, audio.TimeLength)
 end
 function Player:destroy()
 	if self.destroyed then
@@ -185,6 +279,11 @@ function Player:destroy()
 	if self.folder then
 		self.folder:Destroy()
 	end
+end
+
+-- true: advance when a track ends; false: stop and destroy when it ends.
+function Player:setAutoplay(enabled: boolean)
+	self.autoplay = enabled == true
 end
 
 function Player:getBeatPhase(): number?
