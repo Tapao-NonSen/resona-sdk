@@ -4,15 +4,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Resona = require(ReplicatedStorage:WaitForChild("Resona"))
 
-local floor = Instance.new("Part")
-floor.Name = "ZyncFloor"
-floor.Size = Vector3.new(96, 2, 96)
-floor.Position = Vector3.new(0, -1, 0)
-floor.Anchored = true
-floor.Material = Enum.Material.SmoothPlastic
-floor.Color = Color3.fromRGB(17, 20, 29)
-floor.Parent = workspace
-
 local spawn = Instance.new("SpawnLocation")
 spawn.Name = "ZyncSpawn"
 spawn.Size = Vector3.new(8, 1, 8)

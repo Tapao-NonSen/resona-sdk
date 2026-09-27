@@ -11,5 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ok-nick/setup-aftman@v0.4.2
       - run: aftman install
-      - run: stylua --check src tests
+      - run: stylua --check src tests examples/zync/src
       - run: lune run tests/run
