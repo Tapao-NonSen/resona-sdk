@@ -13,7 +13,7 @@ player.TrackChanged:Connect(function(track)
     print("[Resona]", track.title, track.artist)
 end)
 player.Beat:Connect(function(beat, track)
-    -- Drive a visual effect on each beat when the track has BPM data.
+    -- Drive a visual effect on each beat. track.bpm == nil means the 128 BPM default is ticking.
 end)
 player.Bar:Connect(function(bar, track)
     -- Fires every four beats.
@@ -21,6 +21,6 @@ end)
 player:play()
 ```
 
-`new` accepts `filters` and `volume` (default `0.5`). Methods: `play()`, `skip()`, `stop()`, `destroy()`, and `getBeatPhase()`. The phase is `0..1` while a track with BPM data plays, otherwise `nil`. `TrackChanged` fires after playback starts; `Beat` and `Bar` fire only when BPM is available. Call `destroy()` when finished.
+`new` accepts `filters` and `volume` (default `0.5`). Methods: `play()`, `skip()`, `stop()`, `destroy()`, and `getBeatPhase()`. The phase is `0..1` while a track plays, otherwise `nil`. `TrackChanged` fires after playback starts. `Beat` and `Bar` always fire: a track without BPM ticks at 128 BPM from offset 0, and if this client measures it, the clock switches to the measured BPM and beat offset (and sets them on `track`) mid-track. Call `destroy()` when finished.
 
 With contribution enabled in [init](init.md), the player sends observed playback duration and may analyze a missing BPM using the same audible stream. It does not send raw audio. The built-in [ReportGui](report-gui.md) can use its current track ID automatically. For server `Sound` playback, see [ServerPlayer](server-player.md).

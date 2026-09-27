@@ -15,4 +15,4 @@ end)
 player:play()
 ```
 
-It supports `play()`, `skip()`, `stop()`, `destroy()`, `getBeatPhase()`, and `TrackChanged`, `Beat`, and `Bar` signals. Its `Sound` reports a successful play's duration when contribution is enabled, but it cannot collect spectrum measurements for BPM. Use the client [Player](player.md) for analysis of audible playback.
+It supports `play()`, `skip()`, `stop()`, `destroy()`, `getBeatPhase()`, and `TrackChanged`, `Beat`, and `Bar` signals; a track without BPM ticks at 128 BPM. Its `Sound` reports a successful play's duration when contribution is enabled, but it cannot collect spectrum measurements for BPM. Use the client [Player](player.md) for analysis of audible playback.

@@ -62,4 +62,9 @@ function tests.large_offsets_and_fractional_bpm_stay_consistent()
 	Expect.equal(clock:tick(2.5).beat, 0)
 end
 
+function tests.missing_bpm_defaults_to_128()
+	close(BeatClock.new(nil, 0).period, 60 / 128)
+	close(BeatClock.new(0, 0).period, 60 / 128)
+end
+
 return tests

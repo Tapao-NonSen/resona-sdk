@@ -36,6 +36,8 @@ function Bridge.start(
 	local issued: { [Player]: { id: number, at: number, analyze: boolean } } = {}
 	local claimed: { [number]: Player } = {}
 	local attempted: { [number]: boolean } = {}
+	-- ponytail: one client's estimate is trusted for this server only; the API still waits for consensus.
+	local learned: { [number]: { bpm: number, bpmConfidence: number, firstBeatOffset: number } } = {}
 	local active: number? = nil
 	local lastAnalysis = -math.huge
 	local lastRequest: { [Player]: number } = {}
@@ -75,6 +77,13 @@ function Bridge.start(
 		local track = pool:next(safeFilters)
 		if not track then
 			return nil
+		end
+		local known = track.bpm == nil and learned[track.id]
+		if known then
+			track = table.clone(track)
+			track.bpm = known.bpm
+			track.bpmConfidence = known.bpmConfidence
+			track.firstBeatOffset = known.firstBeatOffset
 		end
 		local previous = issued[player]
 		if previous and claimed[previous.id] == player then
@@ -285,6 +294,11 @@ function Bridge.start(
 			end
 			observer:submit(safe)
 			if item.bpm ~= nil then
+				learned[current.id] = {
+					bpm = safe.bpm,
+					bpmConfidence = safe.bpmConfidence,
+					firstBeatOffset = safe.firstBeatOffset,
+				}
 				if claimed[current.id] == player then
 					claimed[current.id] = nil
 					if active == current.id then

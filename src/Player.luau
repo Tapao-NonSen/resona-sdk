@@ -81,7 +81,7 @@ end
 
 function Player:_startBeatClock(track: Types.Track)
 	self:_stopBeatClock()
-	if not dependencies or not track.bpm or track.bpm <= 0 or not self.sound then
+	if not dependencies or not self.sound then
 		return
 	end
 	local clock = BeatClock.new(track.bpm, track.firstBeatOffset or 0)

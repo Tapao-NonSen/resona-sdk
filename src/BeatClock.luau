@@ -14,9 +14,12 @@ export type BeatClock = typeof(setmetatable(
 	BeatClock
 ))
 
-function BeatClock.new(bpm: number, firstBeatOffset: number, beatsPerBar: number?): BeatClock
+-- ponytail: unanalyzed tracks tick at a common dance tempo until a measured BPM replaces the clock.
+BeatClock.DEFAULT_BPM = 128
+
+function BeatClock.new(bpm: number?, firstBeatOffset: number, beatsPerBar: number?): BeatClock
 	return setmetatable({
-		period = 60 / bpm,
+		period = 60 / (if bpm and bpm > 0 then bpm else BeatClock.DEFAULT_BPM),
 		firstBeatOffset = firstBeatOffset,
 		beatsPerBar = beatsPerBar or 4,
 		lastBeat = nil,

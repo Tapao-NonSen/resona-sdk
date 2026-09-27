@@ -74,9 +74,6 @@ end
 
 function ClientPlayer:_startClock(track: any)
 	self:_stopClock()
-	if not track.bpm or track.bpm <= 0 then
-		return
-	end
 	local clock = BeatClock.new(track.bpm, track.firstBeatOffset or 0)
 	self.clock = clock
 	self.heartbeat = RunService.Heartbeat:Connect(function()
@@ -161,6 +158,11 @@ function ClientPlayer:_playNext()
 				return bpm, Features.features(envelope, onset)
 			end)
 			if valid and estimate.confidence >= 1.5 then
+				-- Use the estimate now: Beat/Bar start mid-track; the server reuses it for later plays.
+				track.bpm = estimate.bpm
+				track.bpmConfidence = estimate.confidence
+				track.firstBeatOffset = estimate.firstBeatOffset
+				self:_startClock(track)
 				self.evidence:FireServer({
 					assetId = track.id,
 					duration = self.audioPlayer.TimeLength,

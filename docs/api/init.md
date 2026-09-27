@@ -26,6 +26,6 @@ The SDK caches responses, shares concurrent identical requests, and backs off on
 
 ## Contribution disclosure
 
-With contribution enabled, SDK playback can submit the Roblox audio ID and observed duration. For tracks without BPM, one client per server may analyze up to 24 seconds of the same audible audio and submit BPM, beat offset, confidence, and compact features. The API stores an API-key hash and game universe ID with accepted observations. The SDK does not send player identity, microphone input, raw audio, or a frame-by-frame spectrum. Observations do not change public BPM automatically. Tell players in your game's privacy notice if your game contributes measurements.
+With contribution enabled, SDK playback can submit the Roblox audio ID and observed duration. For tracks without BPM, one client per server may analyze up to 24 seconds of the same audible audio and submit BPM, beat offset, confidence, and compact features. The API stores an API-key hash and game universe ID with accepted observations. The SDK does not send player identity, microphone input, raw audio, or a frame-by-frame spectrum. A track with no BPM gets one only after 3 or more games agree within ±1.5 BPM and ±0.1 s beat offset. Tell players in your game's privacy notice if your game contributes measurements.
 
 See [Player](player.md) for playback and [ReportGui](report-gui.md) for the optional form.
