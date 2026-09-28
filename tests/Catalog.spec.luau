@@ -69,4 +69,27 @@ return {
 		end, {}, { genres = {}, assetIds = { [3] = true }, uploaderIds = nil })
 		Expect.equal(single:get(3), nil)
 	end,
+	["getBatch preserves order (including a JSON-null hole) and applies seed fallback and disallow"] = function()
+		local seed = { { id = 5, genre = "dance", duration = 100 } }
+		local client = { calls = 0 }
+		function client:request(_method: string, _path: string)
+			self.calls += 1
+			if self.calls == 1 then
+				return "encoded", { source = "network" }
+			end
+			return nil, { source = "seed", error = "network" }
+		end
+		local catalog = Catalog.new(client, function()
+			return { tracks = { { id = 1, genre = "pop" }, nil, { id = 3, genre = "Phonk" } } }
+		end, seed, { genres = { phonk = true }, assetIds = {}, uploaderIds = nil })
+		-- A miss is a nil hole (like the JSON null it came from): index by position, never trust #tracks.
+		local tracks, meta = catalog:getBatch({ 1, 2, 3 })
+		Expect.equal(tracks[1].id, 1)
+		Expect.equal(tracks[2], nil)
+		Expect.equal(tracks[3], nil) -- disallowed genre, even though the API returned it
+		Expect.equal(meta.source, "network")
+		local fallback = catalog:getBatch({ 5, 9 }) -- request #2 fails; per-id seed fallback
+		Expect.equal(fallback[1].id, 5)
+		Expect.equal(fallback[2], nil)
+	end,
 }

@@ -8,6 +8,23 @@ local ANALYSIS_INTERVAL = 300 -- at most one 24-second capture per game server e
 local ALLOWED_FILTER_KEYS =
 	{ genre = true, mood = true, bpmMin = true, bpmMax = true, energyMin = true, durationMax = true, kind = true }
 
+local function sanitizeIds(value: any, max: number): { number }?
+	if type(value) ~= "table" then
+		return nil
+	end
+	local ids = {}
+	for _, v in value do
+		if type(v) ~= "number" or v % 1 ~= 0 or v <= 0 or v > 9007199254740991 then
+			return nil
+		end
+		table.insert(ids, v)
+	end
+	if #ids == 0 or #ids > max then
+		return nil
+	end
+	return ids
+end
+
 local function sanitizeFilters(filters: any): any
 	local safe = {}
 	if type(filters) == "table" then
@@ -176,6 +193,13 @@ function Bridge.start(
 		local op = request.op
 		local ok, value, meta = pcall(function()
 			if op == "get" then
+				if request.ids ~= nil then
+					local ids = sanitizeIds(request.ids, 50)
+					if not ids then
+						return nil, { source = "seed", error = "invalid_id" }
+					end
+					return catalog:getBatch(ids)
+				end
 				local id = request.id
 				if type(id) ~= "number" or id % 1 ~= 0 or id <= 0 or id > 9007199254740991 then
 					return nil, { source = "seed", error = "invalid_id" }

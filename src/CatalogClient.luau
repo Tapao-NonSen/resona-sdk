@@ -31,6 +31,11 @@ function CatalogClient.get(id: number): (Types.Track?, Types.Meta)
 	return invoke("get", { id = id })
 end
 
+function CatalogClient.getBatch(ids: { number }): ({ Types.Track? }, Types.Meta)
+	local value, meta = invoke("get", { ids = ids })
+	return (if type(value) == "table" then value else {}) :: { Types.Track? }, meta
+end
+
 function CatalogClient.search(text: string, filters: Types.Filters?): ({ Types.Track }, Types.Meta)
 	local value, meta = invoke("search", { text = text, filters = filters })
 	return (if type(value) == "table" then value else {}) :: { Types.Track }, meta

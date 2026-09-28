@@ -149,7 +149,15 @@ function Resona.tracks(filters: Types.Filters?): (Types.Page, Types.Meta)
 		return (state :: State).catalog:tracks(filters)
 	end)
 end
-function Resona.get(id: number): (Types.Track?, Types.Meta)
+function Resona.get(id: number | { number }): (Types.Track? | { Types.Track? }, Types.Meta)
+	if type(id) == "table" then
+		if game:GetService("RunService"):IsClient() then
+			return CatalogClient.getBatch(id)
+		end
+		return call({}, function()
+			return (state :: State).catalog:getBatch(id)
+		end)
+	end
 	if game:GetService("RunService"):IsClient() then
 		return CatalogClient.get(id)
 	end

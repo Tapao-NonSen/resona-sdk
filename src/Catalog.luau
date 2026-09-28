@@ -125,6 +125,35 @@ function Catalog:get(id: number): (Types.Track?, Types.Meta)
 	return if self:_allowed(value) then value :: Types.Track? else nil, meta
 end
 
+-- One request/D1 query for many ids. Result order matches `ids`; a miss is nil at that index.
+function Catalog:getBatch(ids: { number }): ({ Types.Track? }, Types.Meta)
+	if #ids == 0 then
+		return {}, { source = "seed" }
+	end
+	local idStrs = {}
+	for index, id in ids do
+		idStrs[index] = tostring(id)
+	end
+	local query = self:_query(nil)
+	query.ids = table.concat(idStrs, ",")
+	local value, meta = self:_get(withQuery("/v1/tracks/batch", query), nil)
+	local rows = if type(value) == "table" and type(value.tracks) == "table" then value.tracks else nil
+	local tracks: { Types.Track? } = {}
+	for index, id in ids do
+		local track = rows and rows[index]
+		if track == nil then
+			for _, seedTrack in self.seed do
+				if seedTrack.id == id then
+					track = seedTrack
+					break
+				end
+			end
+		end
+		tracks[index] = if track and self:_allowed(track) then track :: Types.Track? else nil
+	end
+	return tracks, meta
+end
+
 function Catalog:search(text: string, filters: Types.Filters?): ({ Types.Track }, Types.Meta)
 	local query = self:_query(filters)
 	query.q = text
