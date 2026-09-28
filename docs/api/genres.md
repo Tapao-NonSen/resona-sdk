@@ -4,7 +4,7 @@
 Resona.genres() -> ({ Resona.GenreCount }, Resona.Meta)
 ```
 
-Build a genre selector from a server Script after [initialization](init.md).
+Build a genre selector, from a server Script after [initialization](init.md) or from a LocalScript once the server has initialized. Client calls cross the server bridge and are rate-limited per player (30 catalog lookups per session, 1/second).
 
 ```luau
 local Resona = require(game.ReplicatedStorage.Packages.Resona)

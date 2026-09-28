@@ -4,7 +4,7 @@
 Resona.get(id: number) -> (Resona.Track?, Resona.Meta)
 ```
 
-Look up a single Roblox audio asset ID from a server Script after [initialization](init.md).
+Look up a single Roblox audio asset ID, from a server Script after [initialization](init.md) or from a LocalScript once the server has initialized. Client calls cross the server bridge and are rate-limited per player (30 catalog lookups per session, 1/second).
 
 ```luau
 local Resona = require(game.ReplicatedStorage.Packages.Resona)

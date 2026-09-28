@@ -4,7 +4,7 @@
 Resona.random(filters: Resona.Filters?) -> (Resona.Track?, Resona.Meta)
 ```
 
-Get one track for a station or playlist from a server Script after [initialization](init.md).
+Get one track for a station or playlist, from a server Script after [initialization](init.md) or from a LocalScript once the server has initialized. Client calls cross the server bridge and are rate-limited per player (30 catalog lookups per session, 1/second); each pick still draws from the server's own pool.
 
 ```luau
 local Resona = require(game.ReplicatedStorage.Packages.Resona)

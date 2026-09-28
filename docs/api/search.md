@@ -4,7 +4,7 @@
 Resona.search(text: string, filters: Resona.Filters?) -> ({ Resona.Track }, Resona.Meta)
 ```
 
-Find tracks by title, artist, or album prefix from a server Script after [initialization](init.md).
+Find tracks by title, artist, or album prefix, from a server Script after [initialization](init.md) or from a LocalScript once the server has initialized (e.g. a search box UI). Client calls cross the server bridge and are rate-limited per player (30 catalog lookups per session, 1/second).
 
 ```luau
 local Resona = require(game.ReplicatedStorage.Packages.Resona)

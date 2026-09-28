@@ -298,6 +298,9 @@ function Player:setAutoplay(enabled: boolean)
 	self.autoplay = enabled == true
 end
 
+function Player:getQueue(): { Types.Track }
+	return table.clone(self.queued or {})
+end
 function Player:getBeatPhase(): number?
 	if not self.beatClock or not self.audio then
 		return nil

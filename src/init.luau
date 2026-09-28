@@ -11,6 +11,7 @@ local Catalog = require("@self/Catalog")
 local Pool = require("@self/Pool")
 local Reporter = require("@self/Reporter")
 local ReportClient = require("@self/ReportClient")
+local CatalogClient = require("@self/CatalogClient")
 local ReportGui = require("@self/ReportGui")
 local Observer = require("@self/Observer")
 local ClientBridge = require("@self/ClientBridge")
@@ -112,7 +113,7 @@ function Resona.init(input: Types.Config)
 		return false, "Could not verify this public audio asset."
 	end
 	state = { catalog = catalog, pool = pool, reporter = reporter, validateAdd = validateAdd }
-	ClientBridge.start(pool, observer, reporter, resolved.showReportGui, validateAdd)
+	ClientBridge.start(pool, catalog, observer, reporter, resolved.showReportGui, validateAdd)
 	Player.configure({
 		pool = pool,
 		reporter = if resolved.contribute then reporter else { report = function() end },
@@ -149,21 +150,33 @@ function Resona.tracks(filters: Types.Filters?): (Types.Page, Types.Meta)
 	end)
 end
 function Resona.get(id: number): (Types.Track?, Types.Meta)
+	if game:GetService("RunService"):IsClient() then
+		return CatalogClient.get(id)
+	end
 	return call(nil, function()
 		return (state :: State).catalog:get(id)
 	end)
 end
 function Resona.search(text: string, filters: Types.Filters?): ({ Types.Track }, Types.Meta)
+	if game:GetService("RunService"):IsClient() then
+		return CatalogClient.search(text, filters)
+	end
 	return call({}, function()
 		return (state :: State).catalog:search(text, filters)
 	end)
 end
 function Resona.random(filters: Types.Filters?): (Types.Track?, Types.Meta)
+	if game:GetService("RunService"):IsClient() then
+		return CatalogClient.random(filters)
+	end
 	return call(Seed[math.random(1, #Seed)], function()
 		return (state :: State).pool:next(filters)
 	end)
 end
 function Resona.genres(): ({ Types.GenreCount }, Types.Meta)
+	if game:GetService("RunService"):IsClient() then
+		return CatalogClient.genres()
+	end
 	return call({ { genre = "electronic", n = #Seed } }, function()
 		return (state :: State).catalog:genres(nil)
 	end)

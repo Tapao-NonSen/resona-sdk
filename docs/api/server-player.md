@@ -14,6 +14,7 @@ ServerPlayer:skip() -> ()
 ServerPlayer:stop() -> ()
 ServerPlayer:destroy() -> ()
 ServerPlayer:queue(track: Resona.Track) -> ()   -- plays before autoplay's pick, in order added
+ServerPlayer:getQueue() -> { Resona.Track }     -- server only; always empty on a following client
 ServerPlayer:seek(position: number) -> ()       -- seconds; every player follows
 ServerPlayer:setAutoplay(enabled: boolean) -> ()
 ServerPlayer:getBeatPhase() -> number?

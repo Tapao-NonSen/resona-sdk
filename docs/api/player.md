@@ -12,6 +12,7 @@ Player:skip() -> ()
 Player:stop() -> ()
 Player:destroy() -> ()
 Player:queue(track: Resona.Track) -> ()   -- plays before autoplay's pick, in order added
+Player:getQueue() -> { Resona.Track }     -- a copy; mutating it does not change the player
 Player:seek(position: number) -> ()       -- seconds into the current track
 Player:setAutoplay(enabled: boolean) -> ()
 Player:getBeatPhase() -> number?          -- 0..1 within the current beat
@@ -61,6 +62,8 @@ if track then
     player:queue(track)
 end
 ```
+
+`getQueue()` returns a snapshot for UI like an "up next" list; it's a copy, so editing the returned array has no effect on playback.
 
 ## Seeking
 

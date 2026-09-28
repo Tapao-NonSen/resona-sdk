@@ -5,9 +5,30 @@ local Players = game:GetService("Players")
 local Bridge = {}
 local connections = {}
 local ANALYSIS_INTERVAL = 300 -- at most one 24-second capture per game server every five minutes
+local ALLOWED_FILTER_KEYS =
+	{ genre = true, mood = true, bpmMin = true, bpmMax = true, energyMin = true, durationMax = true, kind = true }
+
+local function sanitizeFilters(filters: any): any
+	local safe = {}
+	if type(filters) == "table" then
+		for key, value in filters do
+			if
+				ALLOWED_FILTER_KEYS[key]
+				and (
+					(type(value) == "string" and #value <= 60)
+					or (type(value) == "number" and value == value and value >= 0 and value <= 10000)
+				)
+			then
+				safe[key] = value
+			end
+		end
+	end
+	return safe
+end
 
 function Bridge.start(
 	pool: any,
+	catalog: any,
 	observer: any,
 	reporter: any,
 	showReportGui: boolean?,
@@ -33,6 +54,9 @@ function Bridge.start(
 	local checkAdd = folder:FindFirstChild("CheckAdd") or Instance.new("RemoteFunction")
 	checkAdd.Name = "CheckAdd"
 	checkAdd.Parent = folder
+	local catalogQuery = folder:FindFirstChild("CatalogQuery") or Instance.new("RemoteFunction")
+	catalogQuery.Name = "CatalogQuery"
+	catalogQuery.Parent = folder
 	local issued: { [Player]: { id: number, at: number, analyze: boolean } } = {}
 	local claimed: { [number]: Player } = {}
 	local attempted: { [number]: boolean } = {}
@@ -48,8 +72,8 @@ function Bridge.start(
 	local checking: { [Player]: boolean } = {}
 	local checkCount: { [Player]: number } = {}
 	local reportCount: { [Player]: number } = {}
-	local allowed =
-		{ genre = true, mood = true, bpmMin = true, bpmMax = true, energyMin = true, durationMax = true, kind = true }
+	local lastCatalogRequest: { [Player]: number } = {}
+	local catalogCount: { [Player]: number } = {}
 
 	nextTrack.OnServerInvoke = function(player: Player, filters: any)
 		local now = os.clock()
@@ -60,20 +84,7 @@ function Bridge.start(
 		if filters ~= nil and type(filters) ~= "table" then
 			return nil
 		end
-		local safeFilters = {}
-		if filters then
-			for key, value in filters do
-				if
-					allowed[key]
-					and (
-						(type(value) == "string" and #value <= 60)
-						or (type(value) == "number" and value == value and value >= 0 and value <= 10000)
-					)
-				then
-					safeFilters[key] = value
-				end
-			end
-		end
+		local safeFilters = sanitizeFilters(filters)
 		local track = pool:next(safeFilters)
 		if not track then
 			return nil
@@ -147,6 +158,46 @@ function Bridge.start(
 					then asset.artist:sub(1, 120)
 					else "",
 			}
+	end
+
+	catalogQuery.OnServerInvoke = function(player: Player, request: any)
+		if type(request) ~= "table" or type(request.op) ~= "string" then
+			return nil, { source = "seed", error = "invalid_request" }
+		end
+		local now = os.clock()
+		if now - (lastCatalogRequest[player] or -math.huge) < 1 then
+			return nil, { source = "seed", error = "rate_limited" }
+		end
+		if (catalogCount[player] or 0) >= 30 then
+			return nil, { source = "seed", error = "session_limit" }
+		end
+		lastCatalogRequest[player] = now
+		catalogCount[player] = (catalogCount[player] or 0) + 1
+		local op = request.op
+		local ok, value, meta = pcall(function()
+			if op == "get" then
+				local id = request.id
+				if type(id) ~= "number" or id % 1 ~= 0 or id <= 0 or id > 9007199254740991 then
+					return nil, { source = "seed", error = "invalid_id" }
+				end
+				return catalog:get(id)
+			elseif op == "search" then
+				local text = request.text
+				if type(text) ~= "string" or #text > 60 then
+					return nil, { source = "seed", error = "invalid_query" }
+				end
+				return catalog:search(text, sanitizeFilters(request.filters))
+			elseif op == "random" then
+				return pool:next(sanitizeFilters(request.filters))
+			elseif op == "genres" then
+				return catalog:genres(nil)
+			end
+			return nil, { source = "seed", error = "unknown_op" }
+		end)
+		if not ok then
+			return nil, { source = "seed", error = "unavailable" }
+		end
+		return value, meta
 	end
 
 	submitReport.OnServerInvoke = function(player: Player, item: any)
@@ -329,6 +380,8 @@ function Bridge.start(
 			checking[player] = nil
 			checkCount[player] = nil
 			reportCount[player] = nil
+			lastCatalogRequest[player] = nil
+			catalogCount[player] = nil
 		end)
 	)
 end

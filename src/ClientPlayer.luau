@@ -255,6 +255,10 @@ function ClientPlayer:setAutoplay(enabled: boolean)
 	self.autoplay = enabled == true
 end
 
+function ClientPlayer:getQueue(): { any }
+	return table.clone(self.queued)
+end
+
 function ClientPlayer:getBeatPhase(): number?
 	if not self.clock then
 		return nil
