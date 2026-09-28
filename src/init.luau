@@ -35,7 +35,7 @@ export type ReportSuggestion = Types.ReportSuggestion
 export type GenreCount = Types.GenreCount
 export type AddAsset = Types.AddAsset
 
-local Resona = { VERSION = "0.5.0", Player = ClientPlayer, ServerPlayer = Player, ReportGui = ReportGui }
+local Resona = { VERSION = "0.6.0", Player = ClientPlayer, ServerPlayer = Player, ReportGui = ReportGui }
 type CatalogApi = {
 	tracks: (self: CatalogApi, filters: Types.Filters?) -> (Types.Page, Types.Meta),
 	get: (self: CatalogApi, id: number) -> (Types.Track?, Types.Meta),
