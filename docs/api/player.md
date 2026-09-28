@@ -3,6 +3,7 @@
 ```luau
 Resona.Player.new(options: {
     filters: Resona.Filters?,
+    track: Resona.Track?, -- plays first, then autoplay's picks
     volume: number?,      -- default 0.5
     autoplay: boolean?,   -- default true
 }?) -> Player
@@ -64,6 +65,14 @@ end
 ```
 
 `getQueue()` returns a snapshot for UI like an "up next" list; it's a copy, so editing the returned array has no effect on playback.
+
+Pass `track` to `Player.new` to start on a specific track instead of autoplay's first pick — equivalent to queuing it before the first `play()`:
+
+```luau
+local track = Resona.get(1835133008)
+local player = Resona.Player.new({ track = track, filters = { genre = "electronic" } })
+player:play()
+```
 
 ## Seeking
 

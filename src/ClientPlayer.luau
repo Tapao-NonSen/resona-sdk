@@ -12,7 +12,7 @@ local ReportGui = require("./ReportGui")
 local ClientPlayer = {}
 ClientPlayer.__index = ClientPlayer
 
-export type Options = { filters: any?, volume: number?, autoplay: boolean? }
+export type Options = { filters: any?, track: any?, volume: number?, autoplay: boolean? }
 
 function ClientPlayer.new(options: Options?)
 	options = options or {}
@@ -24,7 +24,7 @@ function ClientPlayer.new(options: Options?)
 		autoplay = options.autoplay ~= false,
 		failedTracks = 0,
 		seeks = 0,
-		queued = {},
+		queued = if options.track then { options.track } else {},
 		TrackChanged = Signal.new(),
 		Beat = Signal.new(),
 		Bar = Signal.new(),

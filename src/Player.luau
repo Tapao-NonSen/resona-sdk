@@ -21,7 +21,13 @@ export type Dependencies = {
 	loadTimeout: number,
 	runService: { Heartbeat: { Connect: (self: any, listener: (number) -> ()) -> RBXScriptConnection } },
 }
-export type Options = { filters: Types.Filters?, parent: Instance?, volume: number?, autoplay: boolean? }
+export type Options = {
+	filters: Types.Filters?,
+	track: Types.Track?,
+	parent: Instance?,
+	volume: number?,
+	autoplay: boolean?,
+}
 type PlayerState = {
 	audio: AudioPlayer?,
 	folder: Folder?,
@@ -79,7 +85,7 @@ function Player.new(options: Options?): PlayerState
 		folder = folder,
 		filters = options.filters,
 		autoplay = options.autoplay ~= false,
-		queued = {},
+		queued = if options.track then { options.track } else {},
 		stopped = true,
 		destroyed = false,
 		failedTracks = 0,
