@@ -14,6 +14,17 @@ ClientPlayer.__index = ClientPlayer
 
 export type Options = { filters: any?, track: any?, volume: number?, autoplay: boolean? }
 
+-- Accepts one Track or a list; a Track is distinguished by its required `id` field.
+local function trackList(track: any): { any }
+	if type(track) ~= "table" then
+		return {}
+	end
+	if track.id ~= nil then
+		return { track }
+	end
+	return track
+end
+
 function ClientPlayer.new(options: Options?)
 	options = options or {}
 	local self = setmetatable({
@@ -24,7 +35,7 @@ function ClientPlayer.new(options: Options?)
 		autoplay = options.autoplay ~= false,
 		failedTracks = 0,
 		seeks = 0,
-		queued = if options.track then { options.track } else {},
+		queued = trackList(options.track),
 		TrackChanged = Signal.new(),
 		Beat = Signal.new(),
 		Bar = Signal.new(),

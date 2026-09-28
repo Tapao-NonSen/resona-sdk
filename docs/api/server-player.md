@@ -4,7 +4,7 @@
 -- Server Script: owns playback
 Resona.ServerPlayer.new(options: {
     filters: Resona.Filters?,
-    track: Resona.Track?, -- plays first, then autoplay's picks
+    track: (Resona.Track | { Resona.Track })?, -- plays in order, then autoplay's picks
     parent: Instance?,    -- default SoundService
     volume: number?,      -- default 0.5
     autoplay: boolean?,   -- default true
@@ -58,6 +58,6 @@ end)
 
 ## Autoplay and seeking
 
-With `autoplay = true` (the default), the next track starts when one ends. With `autoplay = false`, the player stops and destroys itself when its track ends. Change it with `setAutoplay(enabled)`. `seek(position)` jumps every player to `position` seconds in the current track. `queue(track)` appends a track that plays, for everyone, before autoplay resumes picking — see [Player](player.md#queueing) for details, which apply the same way here. `track` in `ServerPlayer.new` starts on a specific track the same way, equivalent to queuing it before the first `play()`.
+With `autoplay = true` (the default), the next track starts when one ends. With `autoplay = false`, the player stops and destroys itself when its track ends. Change it with `setAutoplay(enabled)`. `seek(position)` jumps every player to `position` seconds in the current track. `queue(track)` appends a track that plays, for everyone, before autoplay resumes picking — see [Player](player.md#queueing) for details, which apply the same way here. `track` in `ServerPlayer.new` starts on a specific track (or an ordered list) the same way, equivalent to queuing it before the first `play()`.
 
 A track without BPM ticks at 128 BPM. The player reports a successful play's duration when contribution is enabled. Servers render no audio, so it cannot measure BPM; use the client [Player](player.md) for that.

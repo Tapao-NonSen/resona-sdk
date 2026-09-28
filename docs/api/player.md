@@ -3,7 +3,7 @@
 ```luau
 Resona.Player.new(options: {
     filters: Resona.Filters?,
-    track: Resona.Track?, -- plays first, then autoplay's picks
+    track: (Resona.Track | { Resona.Track })?, -- plays in order, then autoplay's picks
     volume: number?,      -- default 0.5
     autoplay: boolean?,   -- default true
 }?) -> Player
@@ -66,12 +66,16 @@ end
 
 `getQueue()` returns a snapshot for UI like an "up next" list; it's a copy, so editing the returned array has no effect on playback.
 
-Pass `track` to `Player.new` to start on a specific track instead of autoplay's first pick — equivalent to queuing it before the first `play()`:
+Pass `track` to `Player.new` to start on a specific track (or a list of tracks, played in order) instead of autoplay's first pick — equivalent to queuing it before the first `play()`. A single `Resona.Track` and a `{ Resona.Track }` list are both accepted; a `Track` is told apart from a list by its required `id` field.
 
 ```luau
 local track = Resona.get(1835133008)
 local player = Resona.Player.new({ track = track, filters = { genre = "electronic" } })
-player:play()
+player:play() -- plays `track`, then autoplay resumes with `filters`
+
+local setlist = Resona.search("workout")
+local warmup = Resona.Player.new({ track = setlist }) -- first match plays now, rest queue
+warmup:play()
 ```
 
 ## Seeking

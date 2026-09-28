@@ -23,11 +23,22 @@ export type Dependencies = {
 }
 export type Options = {
 	filters: Types.Filters?,
-	track: Types.Track?,
+	track: (Types.Track | { Types.Track })?,
 	parent: Instance?,
 	volume: number?,
 	autoplay: boolean?,
 }
+
+-- Accepts one Track or a list; a Track is distinguished by its required `id` field.
+local function trackList(track: any): { Types.Track }
+	if type(track) ~= "table" then
+		return {}
+	end
+	if track.id ~= nil then
+		return { track }
+	end
+	return track
+end
 type PlayerState = {
 	audio: AudioPlayer?,
 	folder: Folder?,
@@ -85,7 +96,7 @@ function Player.new(options: Options?): PlayerState
 		folder = folder,
 		filters = options.filters,
 		autoplay = options.autoplay ~= false,
-		queued = if options.track then { options.track } else {},
+		queued = trackList(options.track),
 		stopped = true,
 		destroyed = false,
 		failedTracks = 0,
