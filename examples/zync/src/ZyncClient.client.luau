@@ -51,7 +51,7 @@ local function label(text, y, size)
 	return item
 end
 
-local title = label("ZYNC / RESONA", 14, 30)
+local title = label("RESONA", 14, 30)
 local artist = label("Finding music...", 45, 22)
 local detail = label("", 73, 22)
 detail.Size = UDim2.fromOffset(235, 22)

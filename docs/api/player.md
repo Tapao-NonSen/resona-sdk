@@ -11,6 +11,7 @@ Player:play() -> ()
 Player:skip() -> ()
 Player:stop() -> ()
 Player:destroy() -> ()
+Player:queue(track: Resona.Track) -> ()   -- plays before autoplay's pick, in order added
 Player:seek(position: number) -> ()       -- seconds into the current track
 Player:setAutoplay(enabled: boolean) -> ()
 Player:getBeatPhase() -> number?          -- 0..1 within the current beat
@@ -48,6 +49,17 @@ With `autoplay = true` (the default), the player starts the next track when one 
 ```luau
 local once = Resona.Player.new({ autoplay = false })
 once:play() -- plays a single track, then cleans itself up
+```
+
+## Queueing
+
+`queue(track)` appends a full `Resona.Track` (from [tracks](tracks.md), [get](get.md) or [search](search.md)) to a FIFO played out before autoplay's own picks. `_playNext` checks the queue first on every advance — natural end-of-track, `skip()`, and the first `play()` all drain it in order before falling back to autoplay. A queued track skips duration/BPM contribution: that reporting is tied to the server's own pick, not an explicitly requested one.
+
+```luau
+local track = Resona.get(1835133008)
+if track then
+    player:queue(track)
+end
 ```
 
 ## Seeking

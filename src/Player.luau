@@ -27,6 +27,7 @@ type PlayerState = {
 	folder: Folder?,
 	filters: Types.Filters?,
 	autoplay: boolean?,
+	queued: { Types.Track }?,
 	stopped: boolean,
 	destroyed: boolean,
 	unavailable: boolean?,
@@ -78,6 +79,7 @@ function Player.new(options: Options?): PlayerState
 		folder = folder,
 		filters = options.filters,
 		autoplay = options.autoplay ~= false,
+		queued = {},
 		stopped = true,
 		destroyed = false,
 		failedTracks = 0,
@@ -194,7 +196,9 @@ function Player:_playNext()
 	end
 	self:_stopBeatClock()
 	while not self.stopped and not self.destroyed do
-		local track = dependencies.pool:next(self.filters)
+		local track = if self.queued and #self.queued > 0
+			then table.remove(self.queued, 1)
+			else dependencies.pool:next(self.filters)
 		if not track then
 			return
 		end
@@ -236,6 +240,14 @@ function Player:play()
 	end
 	self.stopped = false
 	self:_playNext()
+end
+-- Plays before autoplay's pool pick, in order added, then falls back to autoplay when empty.
+function Player:queue(track: Types.Track)
+	if self.following then
+		return
+	end
+	self.queued = self.queued or {}
+	table.insert(self.queued, track)
 end
 function Player:skip()
 	if not self.destroyed and not self.unavailable then
