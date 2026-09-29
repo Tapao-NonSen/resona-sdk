@@ -7,3 +7,4 @@ sourcemap.json
 *.rbxlx.lock
 .vscode/
 .codex-bridge/
+.wrangler/
