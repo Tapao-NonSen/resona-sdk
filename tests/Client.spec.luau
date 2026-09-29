@@ -65,6 +65,20 @@ return {
 			Expect.equal(value, "shared")
 		end
 	end,
+	["403 reports forbidden without starting a cooldown"] = function()
+		local clock = Fakes.clock()
+		local transport = Fakes.transport({
+			{ success = false, status = 403 },
+			{ success = true, status = 200, body = "ok" },
+		})
+		local client = makeClient(clock, transport)
+		local value, meta = client:request("GET", "/x")
+		Expect.equal(value, nil)
+		Expect.equal(meta.error, "forbidden")
+		local after, afterMeta = client:request("GET", "/x")
+		Expect.equal(after, "ok")
+		Expect.equal(afterMeta.source, "network")
+	end,
 	["returns stale on retryable errors and honors cooldown"] = function()
 		local clock = Fakes.clock()
 		local transport = Fakes.transport({

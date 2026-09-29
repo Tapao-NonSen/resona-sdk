@@ -35,7 +35,7 @@ export type ReportSuggestion = Types.ReportSuggestion
 export type GenreCount = Types.GenreCount
 export type AddAsset = Types.AddAsset
 
-local Resona = { VERSION = "0.6.1", Player = ClientPlayer, ServerPlayer = Player, ReportGui = ReportGui }
+local Resona = { VERSION = "0.6.2", Player = ClientPlayer, ServerPlayer = Player, ReportGui = ReportGui }
 type CatalogApi = {
 	tracks: (self: CatalogApi, filters: Types.Filters?) -> (Types.Page, Types.Meta),
 	get: (self: CatalogApi, id: number) -> (Types.Track?, Types.Meta),
@@ -59,7 +59,7 @@ type State = {
 	validateAdd: (number) -> (boolean, string, any?),
 }
 local state: State? = nil
-local warned = { http_disabled = false, unauthorized = false }
+local warned = { http_disabled = false, unauthorized = false, forbidden = false }
 local notInitialized: Types.Meta = { source = "seed", error = "not initialized" }
 
 function Resona.init(input: Types.Config)
@@ -132,6 +132,12 @@ local function noteWarning(meta: Types.Meta)
 	elseif meta.error == "unauthorized" and not warned.unauthorized then
 		warned.unauthorized = true
 		warn("[Resona] API key was rejected")
+	elseif meta.error == "forbidden" and not warned.forbidden then
+		warned.forbidden = true
+		warn(
+			"[Resona] This API key belongs to a different Roblox account than this game's owner; "
+				.. "get a key with the owning account at https://resona.nyxbot.app/auth/roblox"
+		)
 	end
 end
 

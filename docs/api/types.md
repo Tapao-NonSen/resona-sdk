@@ -71,7 +71,7 @@ type ConfigInput = {
 
 Some verified tracks have no BPM or energy yet.
 
-`meta.source` is `"network"`, `"cache"`, `"stale"`, or `"seed"`; `meta.error` may describe a failed request. A `seed` result is fallback data, so check the source if current catalog data matters. For `http_disabled`, enable HTTP Requests; for `unauthorized`, check the server secret and API key.
+`meta.source` is `"network"`, `"cache"`, `"stale"`, or `"seed"`; `meta.error` may describe a failed request. A `seed` result is fallback data, so check the source if current catalog data matters. For `http_disabled`, enable HTTP Requests; for `unauthorized`, check the server secret and API key; for `forbidden`, the key belongs to a different Roblox account than the game's owner.
 
 Most catalog calls accept filters such as `genre`, `mood`, `bpmMin`, `bpmMax`, `energyMin`, `durationMax`, and `kind`. [tracks](tracks.md) also accepts `cursor` and `limit`. See each API page for its supported filters.
 

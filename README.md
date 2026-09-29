@@ -5,15 +5,15 @@ that are verified playable, with a real title and artist, genre, mood, BPM and e
 
 Resona only indexes audio that already lives on Roblox. It never hosts, downloads or re-uploads audio.
 
-> **Status:** early development (v0.6.1).
+> **Status:** early development (v0.6.2).
 
 See the [documentation index](docs/index.md) for a quick start and a separate page for each SDK API.
 
 ## Install
-- **Wally:** `resona = "tapao-nonsen/resona@0.6.1"`.
+- **Wally:** `resona = "tapao-nonsen/resona@0.6.2"`.
 - **Creator Store model:** coming with v1.
 
-You need a free API key. Store it with `HttpService:GetSecret`, never in a script. Put the package where both server and client can require it, such as `ReplicatedStorage`.
+You need a free API key: sign in with Roblox at https://resona.nyxbot.app/auth/roblox. The key belongs to your Roblox account and only works in games that account owns (Studio playtests are fine). Store it with `HttpService:GetSecret`, never in a script. Put the package where both server and client can require it, such as `ReplicatedStorage`.
 
 ## Usage
 ```luau

@@ -6,7 +6,7 @@ Use it for a game radio, a genre-based playlist, beat-synced effects, or a playe
 
 ## Simple usage
 
-Initialize once in a server Script. Keep your API key in a Roblox secret and enable HTTP Requests for the experience.
+Initialize once in a server Script. Get a key by signing in with Roblox at https://resona.nyxbot.app/auth/roblox (it only works in games your account owns). Keep your API key in a Roblox secret and enable HTTP Requests for the experience.
 
 ```luau
 local HttpService = game:GetService("HttpService")
@@ -23,7 +23,7 @@ local player = Resona.Player.new({ filters = { genre = "electronic" } })
 player:play()
 ```
 
-Version 0.6.1 is available on Wally as `tapao-nonsen/resona@0.6.0`. Put the package where both server and client can require it, such as `ReplicatedStorage`.
+Version 0.6.2 is available on Wally as `tapao-nonsen/resona@0.6.0`. Put the package where both server and client can require it, such as `ReplicatedStorage`.
 
 ## API pages
 

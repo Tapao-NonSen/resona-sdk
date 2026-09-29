@@ -53,6 +53,9 @@ local function errorKind(response: Types.Response): string
 	if response.status == 401 then
 		return "unauthorized"
 	end
+	if response.status == 403 then
+		return "forbidden" -- the key belongs to a different Roblox user than this game's owner
+	end
 	if response.status == 404 then
 		return "not_found"
 	end
