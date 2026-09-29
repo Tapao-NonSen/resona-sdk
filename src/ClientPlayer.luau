@@ -116,7 +116,11 @@ function ClientPlayer:_playNext()
 	ReportGui.setTrack(nil)
 
 	local track, contribute, analyze, fromQueue
-	if #self.queued > 0 then
+	local retry = self.retry
+	self.retry = nil
+	if retry then
+		track, contribute, analyze, fromQueue = retry.track, retry.contribute, retry.analyze, retry.fromQueue
+	elseif #self.queued > 0 then
 		track = table.remove(self.queued, 1)
 		fromQueue = true
 	else
@@ -141,7 +145,10 @@ function ClientPlayer:_playNext()
 		contribute = result.contribute
 		analyze = result.analyze
 	end
+	self.audioPlayer:Stop()
+	self.audioPlayer.TimePosition = 0
 	self.audioPlayer.Asset = "rbxassetid://" .. tostring(track.id)
+	task.wait(0.1) -- one tick so IsReady/TimeLength reflect the new asset, not the previous track's
 	local started = os.clock()
 	while generation == self.generation and not self.audioPlayer.IsReady and os.clock() - started < 10 do
 		task.wait(0.1)
@@ -150,15 +157,26 @@ function ClientPlayer:_playNext()
 		return
 	end
 	if not self.audioPlayer.IsReady or self.audioPlayer.TimeLength <= 0 then
+		if not retry then
+			-- timeouts are often transient: retry once, then skip
+			self.retry = { track = track, contribute = contribute, analyze = analyze, fromQueue = fromQueue }
+			return self:_playNext()
+		end
 		-- A queued track never went through the bridge, so the server has no issued id to match this against.
 		if not fromQueue then
 			self.evidence:FireServer({ assetId = track.id, failed = true })
 		end
 		self.failedTracks += 1
+		self.audioPlayer:Stop()
+		self.audioPlayer.TimePosition = 0
 		if self.failedTracks >= 5 then
-			self.stopped = true
-			warn("[Resona] Stopped after 5 unavailable tracks")
-			return
+			-- ponytail: likely an outage (HTTP timeouts), so pause and keep trying instead of stopping for good
+			warn("[Resona] 5 tracks failed to load in a row; retrying in 30s")
+			self.failedTracks = 0
+			task.wait(28) -- plus the 2s below
+			if generation ~= self.generation or self.stopped then
+				return
+			end
 		end
 		task.wait(2) -- bridge limits rapid track requests
 		return self:_playNext()

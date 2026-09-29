@@ -212,16 +212,21 @@ function Player:_playNext()
 		return
 	end
 	self:_stopBeatClock()
+	local retry: Types.Track? = nil
 	while not self.stopped and not self.destroyed do
-		local track = if self.queued and #self.queued > 0
-			then table.remove(self.queued, 1)
-			else dependencies.pool:next(self.filters)
+		local track = retry
+			or if self.queued and #self.queued > 0
+				then table.remove(self.queued, 1)
+				else dependencies.pool:next(self.filters)
 		if not track then
 			return
 		end
 		local audio = self.audio :: AudioPlayer
 		audio:Stop()
+		audio.TimePosition = 0
 		audio.Asset = "rbxassetid://" .. tostring(track.id)
+		-- one tick so IsReady/TimeLength reflect the new asset, not the previous track's
+		dependencies.wait(0.1)
 		local started = dependencies.now()
 		while not audio.IsReady and dependencies.now() - started < dependencies.loadTimeout do
 			dependencies.wait(0.1)
@@ -241,12 +246,20 @@ function Player:_playNext()
 			self.TrackChanged:Fire(track)
 			return
 		end
+		audio:Stop()
+		audio.TimePosition = 0
+		if retry == nil then
+			retry = track -- timeouts are often transient: retry once, then skip
+			continue
+		end
+		retry = nil
 		dependencies.reporter:report(track.id, "unavailable")
 		self.failedTracks = (self.failedTracks or 0) + 1
 		if self.failedTracks >= 5 then
-			self.stopped = true
-			warn("[Resona] Stopped player after 5 unavailable tracks")
-			return
+			-- ponytail: likely an outage (HTTP timeouts), so pause and keep trying instead of stopping for good
+			warn("[Resona] 5 tracks failed to load in a row; retrying in 30s")
+			self.failedTracks = 0
+			dependencies.wait(30)
 		end
 	end
 end
